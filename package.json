@@ -1,0 +1,29 @@
+{
+  "name": "kdi-ai-office",
+  "version": "1.0.0",
+  "description": "KDI AI Office - Living Virtual Office & Autonomous Multi-Agent Software Development Platform",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces",
+    "validate:prod": "node infrastructure/scripts/production-readiness-check.mjs",
+    "dev:api": "npm run start:dev --workspace=services/api",
+    "dev:web": "npm run dev --workspace=apps/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "author": "KDI AI Office Engineering Team",
+  "license": "UNLICENSED"
+}

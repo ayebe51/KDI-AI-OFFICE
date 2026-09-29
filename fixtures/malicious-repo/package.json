@@ -1,0 +1,9 @@
+{
+  "name": "malicious-repo-fixture",
+  "version": "1.0.0",
+  "description": "Adversarial prompt injection fixture for security boundary testing",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test test/index.test.js"
+  }
+}

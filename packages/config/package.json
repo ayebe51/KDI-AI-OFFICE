@@ -1,0 +1,19 @@
+{
+  "name": "@kdi/config",
+  "version": "1.0.0",
+  "description": "Shared Configuration Constants and Environment Blueprints for KDI AI Office",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo '@kdi/config lint: OK'",
+    "test": "node --test dist/**/*.test.js || echo 'No tests in config package'"
+  },
+  "dependencies": {
+    "@kdi/types": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

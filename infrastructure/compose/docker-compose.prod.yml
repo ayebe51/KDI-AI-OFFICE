@@ -1,0 +1,136 @@
+version: '3.8'
+
+networks:
+  kdi-network-prod:
+    name: kdi-network-prod
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+
+volumes:
+  kdi_postgres_prod:
+    name: kdi_postgres_prod
+  kdi_redis_prod:
+    name: kdi_redis_prod
+  kdi_neo4j_data_prod:
+    name: kdi_neo4j_data_prod
+  kdi_neo4j_logs_prod:
+    name: kdi_neo4j_logs_prod
+
+services:
+  # ==========================================
+  # 1. PostgreSQL 16 - Production Database
+  # ZERO PUBLIC PORT EXPOSURE - INTERNAL ONLY
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: kdi_postgres_prod
+    restart: always
+    networks:
+      kdi-network-prod:
+        ipv4_address: 172.30.0.2
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kdi_ai_office_prod}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - kdi_postgres_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-kdi_ai_office_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 2. Redis 7 - Production Queue & Event Bus
+  # ZERO PUBLIC PORT EXPOSURE - INTERNAL ONLY
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: kdi_redis_prod
+    restart: always
+    networks:
+      kdi-network-prod:
+        ipv4_address: 172.30.0.3
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD} 
+      --maxmemory 1gb 
+      --maxmemory-policy noeviction
+    volumes:
+      - kdi_redis_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 3. Neo4j 5 - Production Graph Memory
+  # ZERO PUBLIC PORT EXPOSURE - INTERNAL ONLY
+  # ==========================================
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: kdi_neo4j_prod
+    restart: always
+    networks:
+      kdi-network-prod:
+        ipv4_address: 172.30.0.4
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_heap_initial__size: 2g
+      NEO4J_dbms_memory_heap_max__size: 4g
+      NEO4J_dbms_memory_pagecache_size: 2g
+    volumes:
+      - kdi_neo4j_data_prod:/data
+      - kdi_neo4j_logs_prod:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ==========================================
+  # 4. KDI AI Office Backend API & WebSocket Service
+  # ==========================================
+  api:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: kdi_api_prod
+    restart: always
+    networks:
+      kdi-network-prod:
+        ipv4_address: 172.30.0.10
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      JWT_SECRET: ${JWT_SECRET}
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+    ports:
+      # Bound strictly to localhost on office PC for FRP tunnel access
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

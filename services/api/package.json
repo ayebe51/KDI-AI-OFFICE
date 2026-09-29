@@ -1,0 +1,37 @@
+{
+  "name": "@kdi/api",
+  "version": "1.0.0",
+  "description": "NestJS Core API, WebSockets & Agent Runtime Service for KDI AI Office",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "start:dev": "node --watch --enable-source-maps dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo '@kdi/api lint: OK'",
+    "test": "tsc -p tsconfig.json && node --test dist/**/*.test.js"
+  },
+  "dependencies": {
+    "@kdi/config": "^1.0.0",
+    "@kdi/shared": "^1.0.0",
+    "@kdi/types": "^1.0.0",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/platform-ws": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
+    "ioredis": "^5.4.2",
+    "neo4j-driver": "^5.27.0",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "demo-calc-repo",
+  "version": "1.0.0",
+  "description": "Demo repository with a simple calculation defect and regression tests for Phase 4 verification",
+  "main": "src/calculator.js",
+  "scripts": {
+    "test": "node --test test/calculator.test.js"
+  }
+}
