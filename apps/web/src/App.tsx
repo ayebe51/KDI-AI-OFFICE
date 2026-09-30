@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Activity, Terminal, Shield, LogOut, Wifi, WifiOff, Cpu, Layers, Share2 } from 'lucide-react';
+import { Box, Activity, Terminal, Shield, LogOut, Wifi, WifiOff, Cpu, Layers, Share2, Scale } from 'lucide-react';
 import { OfficeCanvas } from './components/OfficeCanvas';
 import { PlayCanvasApp, type SelectedAgentDetail } from './3d/index.js';
 import { Dashboard } from './components/Dashboard';
@@ -10,12 +10,15 @@ import { AgentRuntimeConsole } from './components/AgentRuntimeConsole';
 import { EngineeringConsole } from './components/EngineeringConsole';
 import { GraphMemoryConsole } from './components/GraphMemoryConsole';
 import { Login } from './components/Login';
+import { PortfolioGalleryView } from './components/portfolio/index.js';
+import { WorkforceValuationDashboard } from './components/workforce/index';
 import type { AgentState, WSEventEnvelope, AgentStatusChangedPayload } from '@kdi/types';
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('kdi_token'));
   const [username, setUsername] = useState<string>(() => localStorage.getItem('kdi_user') || 'Operator');
-  const [activeTab, setActiveTab] = useState<'3d' | 'dashboard' | 'runtime' | 'engineering' | 'graph' | 'llm' | 'health' | 'command'>('3d');
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'workforce' | '3d' | 'dashboard' | 'runtime' | 'engineering' | 'graph' | 'llm' | 'health' | 'command'>('portfolio');
+
 
   // Backend-driven demo agent state
   const [demoAgentState, setDemoAgentState] = useState<AgentState>('IDLE');
@@ -164,6 +167,30 @@ export function App() {
           {/* Navigation Tabs */}
           <nav className="hidden md:flex items-center space-x-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
             <button
+              onClick={() => setActiveTab('portfolio')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 transition ${
+                activeTab === 'portfolio'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Public Portfolio</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('workforce')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 transition ${
+                activeTab === 'workforce'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Scale className="w-3.5 h-3.5" />
+              <span>Workforce & Valuation</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('3d')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 transition ${
                 activeTab === '3d'
@@ -295,6 +322,13 @@ export function App() {
 
       {/* Main Content View Container */}
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+        {activeTab === 'portfolio' && (
+          <PortfolioGalleryView
+            apiUrl={API_URL}
+            onNavigateTo3D={() => setActiveTab('3d')}
+          />
+        )}
+
         {activeTab === '3d' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -385,6 +419,10 @@ export function App() {
           </div>
         )}
 
+        {activeTab === 'workforce' && (
+          <WorkforceValuationDashboard apiUrl={API_URL} />
+        )}
+
         {activeTab === 'dashboard' && (
           <Dashboard
             apiUrl={API_URL}
@@ -412,7 +450,7 @@ export function App() {
 
         {activeTab === 'health' && <SystemHealth apiUrl={API_URL} />}
 
-        {activeTab === 'command' && <CommandCenter />}
+        {activeTab === 'command' && <CommandCenter apiUrl={API_URL} events={eventLog} />}
       </main>
     </div>
   );

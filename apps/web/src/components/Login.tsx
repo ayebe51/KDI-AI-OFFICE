@@ -92,10 +92,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin, apiUrl }) => {
             disabled={loading}
             className="w-full mt-2 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-heading font-semibold text-sm transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
           >
-            {loading ? 'Authenticating...' : 'Sign In to Command Center'}
+            {loading ? 'Authenticating...' : 'Sign In as Internal Operator'}
           </button>
+
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => onLogin('guest_public_token', 'Public Visitor')}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium transition"
+            >
+              Enter as Public Guest (Portfolio & 3D Showcase)
+            </button>
+          </div>
         </form>
       </div>
     </div>
+
   );
 };

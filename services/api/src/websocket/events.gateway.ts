@@ -53,4 +53,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const envelope = createWSEventEnvelope('agent.status.changed', 'office:events', payload);
     this.broadcastEvent(envelope);
   }
+
+  broadcastOfficeEvent<T = unknown>(
+    eventType: string,
+    data: T,
+    channel: 'office:public' | 'office:events' = 'office:events'
+  ) {
+    const envelope = createWSEventEnvelope(eventType, channel, data);
+    this.broadcastEvent(envelope);
+  }
 }

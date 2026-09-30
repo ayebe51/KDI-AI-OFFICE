@@ -11,6 +11,9 @@ import { LLMModule } from './llm/llm.module.js';
 import { RuntimeModule } from './runtime/runtime.module.js';
 import { EngineeringModule } from './engineering/engineering.module.js';
 import { GraphModule } from './graph/graph.module.js';
+import { OfficeModule } from './office/office.module.js';
+import { WorkforceModule } from './workforce/workforce.module.js';
+import { AutonomyModule } from './autonomy/autonomy.module.js';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { GraphModule } from './graph/graph.module.js';
     RuntimeModule,
     EngineeringModule,
     GraphModule,
+    OfficeModule,
+    WorkforceModule,
+    AutonomyModule,
   ],
 })
 export class AppModule {}

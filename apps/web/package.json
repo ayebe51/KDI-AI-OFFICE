@@ -9,8 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "echo '@kdi/web lint: OK'",
-    "test": "node --test src/3d/adapters/Agent3DStateAdapter.test.ts"
+    "test": "node --test src/3d/adapters/Agent3DStateAdapter.test.ts src/3d/navigation/NavGraph.test.ts src/3d/animation/AgentAnimationController.test.ts src/3d/state/OfficeWorldStore.test.ts src/3d/phase6-integration.test.ts src/components/portfolio/phase7-integration.test.ts src/components/workforce/phase8-integration.test.ts src/components/command-center/phase9-integration.test.ts"
   },
   "dependencies": {
     "@kdi/types": "^1.0.0",
