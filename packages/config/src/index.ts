@@ -59,6 +59,34 @@ export interface AppConfig {
     heartbeatIntervalMs: number;
     staleWorkerThresholdMs: number;
   };
+  reliability: {
+    backupDir: string;
+    backupEncryptionKey?: string;
+    backupRetentionDailyDays: number;
+    backupRetentionWeeklyWeeks: number;
+    backupRetentionMonthlyMonths: number;
+    offsiteStoragePath: string;
+    maxWorkerConcurrency: number;
+    crashLoopThreshold: number;
+    crashLoopCooldownMs: number;
+    rateLimitMaxRequestsPerMinute: number;
+    logDir: string;
+    maxLogSizeBytes: number;
+    enableReadOnlyMode: boolean;
+    enableMaintenanceMode: boolean;
+    enableSafeMode: boolean;
+    enableRecoveryMode: boolean;
+  };
+  telegram: {
+    botToken?: string;
+    ownerId?: string;
+    allowedOwnerIds: string[];
+    webhookSecret?: string;
+    webhookUrl?: string;
+    pollingFallback: boolean;
+    enableAuditLogging: boolean;
+    rateLimitPerMinute: number;
+  };
 }
 
 export const OFFICE_ROOMS = [
@@ -141,6 +169,37 @@ export function loadAppConfig(): AppConfig {
       defaultMaxRetries: parseInt(process.env.RUNTIME_MAX_RETRIES || '3', 10),
       heartbeatIntervalMs: parseInt(process.env.RUNTIME_HEARTBEAT_INTERVAL_MS || '10000', 10),
       staleWorkerThresholdMs: parseInt(process.env.RUNTIME_STALE_WORKER_THRESHOLD_MS || '30000', 10),
+    },
+    reliability: {
+      backupDir: process.env.BACKUP_DIR || (process.platform === 'win32' ? 'd:/kdi-backups' : './backups'),
+      backupEncryptionKey: process.env.BACKUP_ENCRYPTION_KEY || 'kdi-secure-production-backup-key-256-bit-aes-gcm',
+      backupRetentionDailyDays: parseInt(process.env.BACKUP_RETENTION_DAILY_DAYS || '7', 10),
+      backupRetentionWeeklyWeeks: parseInt(process.env.BACKUP_RETENTION_WEEKLY_WEEKS || '4', 10),
+      backupRetentionMonthlyMonths: parseInt(process.env.BACKUP_RETENTION_MONTHLY_MONTHS || '12', 10),
+      offsiteStoragePath: process.env.OFFSITE_STORAGE_PATH || (process.platform === 'win32' ? 'd:/kdi-offsite-vault' : './offsite-vault'),
+      maxWorkerConcurrency: parseInt(process.env.WORKER_MAX_CONCURRENCY || '2', 10),
+      crashLoopThreshold: parseInt(process.env.CRASH_LOOP_THRESHOLD || '3', 10),
+      crashLoopCooldownMs: parseInt(process.env.CRASH_LOOP_COOLDOWN_MS || '60000', 10),
+      rateLimitMaxRequestsPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE || '300', 10),
+      logDir: process.env.LOG_DIR || './logs',
+      maxLogSizeBytes: parseInt(process.env.MAX_LOG_SIZE_BYTES || '10485760', 10), // 10MB
+      enableReadOnlyMode: process.env.ENABLE_READ_ONLY_MODE === 'true',
+      enableMaintenanceMode: process.env.ENABLE_MAINTENANCE_MODE === 'true',
+      enableSafeMode: process.env.ENABLE_SAFE_MODE === 'true',
+      enableRecoveryMode: process.env.ENABLE_RECOVERY_MODE === 'true',
+    },
+    telegram: {
+      botToken: process.env.TELEGRAM_BOT_TOKEN,
+      ownerId: process.env.TELEGRAM_OWNER_ID,
+      allowedOwnerIds: (process.env.TELEGRAM_ALLOWED_OWNER_IDS || process.env.TELEGRAM_OWNER_ID || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      webhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
+      webhookUrl: process.env.TELEGRAM_WEBHOOK_URL,
+      pollingFallback: process.env.TELEGRAM_POLLING_FALLBACK === 'true',
+      enableAuditLogging: process.env.TELEGRAM_ENABLE_AUDIT_LOGGING !== 'false',
+      rateLimitPerMinute: parseInt(process.env.TELEGRAM_RATE_LIMIT_PER_MINUTE || '60', 10),
     },
   };
 }

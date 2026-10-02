@@ -14,6 +14,14 @@ import { GraphModule } from './graph/graph.module.js';
 import { OfficeModule } from './office/office.module.js';
 import { WorkforceModule } from './workforce/workforce.module.js';
 import { AutonomyModule } from './autonomy/autonomy.module.js';
+import { ReliabilityModule } from './reliability/reliability.module.js';
+import { TelegramModule } from './telegram/telegram.module.js';
+import { OrganizationModule } from './organization/organization.module.js';
+import { LearningModule } from './learning/learning.module.js';
+import { StrategyModule } from './strategy/strategy.module.js';
+// Phase 15.1: Company OS + Business AI Gateway
+import { CompanyModule } from './company/company.module.js';
+import { AIGatewayModule } from './ai-gateway/ai-gateway.module.js';
 
 @Module({
   imports: [
@@ -32,6 +40,14 @@ import { AutonomyModule } from './autonomy/autonomy.module.js';
     OfficeModule,
     WorkforceModule,
     AutonomyModule,
+    ReliabilityModule,
+    TelegramModule,
+    OrganizationModule,
+    LearningModule,
+    StrategyModule,
+    // Phase 15.1: Company OS + Business AI Gateway
+    CompanyModule,
+    AIGatewayModule,
   ],
 })
 export class AppModule {}

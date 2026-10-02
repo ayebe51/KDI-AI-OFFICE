@@ -48,4 +48,67 @@ export class AgentsController {
       throw new NotFoundException(msg);
     }
   }
+
+  @Post(':id/chat')
+  async chatWithAgent(
+    @Param('id') id: string,
+    @Body() body: { message: string; context?: string }
+  ) {
+    if (!body?.message) {
+      return { reply: 'Ada yang bisa saya bantu, Pak?', agentId: id };
+    }
+    return await this.agentsService.chatWithAgent(id, body.message, body.context);
+  }
+
+  @Post('naya/leads')
+  recordClientLead(
+    @Body() body: { name: string; company?: string; phone: string; need: string; budget?: string; notes?: string }
+  ) {
+    if (!body?.name || !body?.phone) {
+      throw new NotFoundException('Nama dan kontak WhatsApp wajib diisi');
+    }
+    const lead = this.agentsService.recordLead(body);
+    return {
+      message: 'Calon klien berhasil dicatat oleh Naya (Account Manager)',
+      lead,
+    };
+  }
+
+  // Alias for backward compatibility
+  @Post('sinta/leads')
+  recordClientLeadLegacy(
+    @Body() body: { name: string; company?: string; phone: string; need: string; budget?: string; notes?: string }
+  ) {
+    return this.recordClientLead(body);
+  }
+
+  @Get('naya/leads')
+  getClientLeads() {
+    const leads = this.agentsService.getLeads();
+    return {
+      total: leads.length,
+      data: leads,
+    };
+  }
+
+  // Alias for backward compatibility
+  @Get('sinta/leads')
+  getClientLeadsLegacy() {
+    return this.getClientLeads();
+  }
+
+  @Post('naya/quote-whatsapp')
+  generateWhatsAppQuote(
+    @Body() body: { clientName: string; serviceTitle: string; clientPhone?: string }
+  ) {
+    return this.agentsService.generateWhatsAppQuote(body.clientName, body.serviceTitle, body.clientPhone);
+  }
+
+  // Alias for backward compatibility
+  @Post('sinta/quote-whatsapp')
+  generateWhatsAppQuoteLegacy(
+    @Body() body: { clientName: string; serviceTitle: string; clientPhone?: string }
+  ) {
+    return this.generateWhatsAppQuote(body);
+  }
 }

@@ -6,10 +6,13 @@
 import { Module } from '@nestjs/common';
 import { EngineeringService } from './engineering.service.js';
 import { EngineeringController } from './engineering.controller.js';
+import { EngineeringExecutionModule } from './execution/engineering-execution.module.js';
 
 @Module({
+  imports: [EngineeringExecutionModule],
   controllers: [EngineeringController],
   providers: [EngineeringService],
-  exports: [EngineeringService],
+  exports: [EngineeringService, EngineeringExecutionModule],
 })
 export class EngineeringModule {}
+

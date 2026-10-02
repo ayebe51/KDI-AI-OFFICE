@@ -22,7 +22,8 @@ export type AgentRole =
   | 'TEST_ENGINEER'
   | 'DEBUGGER'
   | 'REFACTORING_ENGINEER'
-  | 'DOCUMENTATION_ENGINEER';
+  | 'DOCUMENTATION_ENGINEER'
+  | 'ACCOUNT_MANAGER';
 
 export type AgentState =
   | 'OFFLINE'
@@ -1138,7 +1139,10 @@ export type OfficeRoomType =
   | 'BREAK'
   | 'MUSHOLLA'
   | 'SERVER'
-  | 'PORTFOLIO';
+  | 'PORTFOLIO'
+  | 'SALES'
+  | 'STUDIO'
+  | 'ROOFTOP';
 
 export interface OfficeRoom {
   roomId: string;
@@ -2250,6 +2254,1574 @@ export interface SimulationResult {
   productionStateAffected: false;
   summary: string;
 }
+
+// ==========================================================
+// Phase 10: Production Hardening, Reliability & Disaster Recovery Types
+// ==========================================================
+
+export type ServiceCriticality = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type ServiceType =
+  | 'DATABASE'
+  | 'CACHE'
+  | 'GRAPH'
+  | 'API'
+  | 'WORKER'
+  | 'ROUTER'
+  | 'ORCHESTRATOR'
+  | 'GATEWAY'
+  | 'FRONTEND';
+
+export interface RestartPolicySpec {
+  restartOnFailure: boolean;
+  maxRestartAttempts: number;
+  initialBackoffMs: number;
+  maxBackoffMs: number;
+  backoffFactor: number;
+  cooldownPeriodMs: number;
+  crashLoopThreshold: number;
+}
+
+export interface ServiceItem {
+  serviceId: string;
+  name: string;
+  type: ServiceType;
+  host: string;
+  port: number;
+  environment: string;
+  dependencies: string[];
+  healthEndpoint: string;
+  startupOrder: number;
+  shutdownOrder: number;
+  criticality: ServiceCriticality;
+  restartPolicy: RestartPolicySpec;
+  backupRequired: boolean;
+  description: string;
+}
+
+export interface ServiceRegistrySnapshot {
+  timestamp: string;
+  services: ServiceItem[];
+  totalServices: number;
+  criticalCount: number;
+  startupSequence: string[];
+  shutdownSequence: string[];
+}
+
+export type HealthSignal = 'HEALTHY' | 'DEGRADED' | 'UNHEALTHY' | 'UNKNOWN';
+
+export type DependencyHealthCause =
+  | 'SERVICE_HEALTHY'
+  | 'DEPENDENCY_UNHEALTHY'
+  | 'CONFIGURATION_INVALID'
+  | 'AUTHENTICATION_FAILED'
+  | 'RESOURCE_EXHAUSTED';
+
+export interface DetailedHealthStatus {
+  status: HealthSignal;
+  cause: DependencyHealthCause;
+  latencyMs: number;
+  message?: string;
+  checkedAt: string;
+  details?: Record<string, unknown>;
+}
+
+export interface LivenessProbeResult {
+  alive: boolean;
+  timestamp: string;
+  uptimeSeconds: number;
+  processId: number;
+}
+
+export interface ReadinessProbeResult {
+  ready: boolean;
+  timestamp: string;
+  criticalServicesReady: boolean;
+  degradedCount: number;
+  unhealthyCount: number;
+  checks: Record<string, DetailedHealthStatus>;
+}
+
+export interface StartupProbeResult {
+  initialized: boolean;
+  timestamp: string;
+  completedStages: string[];
+  durationMs: number;
+}
+
+export interface Subsystem10HealthMatrix {
+  api: DetailedHealthStatus;
+  postgres: DetailedHealthStatus;
+  redis: DetailedHealthStatus;
+  neo4j: DetailedHealthStatus;
+  aiRouter: DetailedHealthStatus;
+  ollama: DetailedHealthStatus;
+  agentRuntime: DetailedHealthStatus;
+  metaGpt: DetailedHealthStatus;
+  antigravity: DetailedHealthStatus;
+  websocket: DetailedHealthStatus;
+}
+
+export type CrashLoopState = 'NORMAL' | 'FAILING' | 'BACKOFF' | 'CRASH_LOOP' | 'ESCALATED';
+
+export interface CrashLoopRecord {
+  serviceId: string;
+  state: CrashLoopState;
+  consecutiveFailures: number;
+  lastFailureAt?: string;
+  nextAttemptAllowedAt?: string;
+  currentBackoffMs: number;
+  escalatedToIncidentId?: string;
+}
+
+export interface WorkerRecoveryRecord {
+  workerId: string;
+  agentRole: string;
+  lastHeartbeatAt: string;
+  activeTaskId?: string;
+  status: 'ACTIVE' | 'ORPHAN_DETECTED' | 'RECOVERED' | 'ESCALATED';
+  recoveredAt?: string;
+}
+
+export interface OrphanTaskCheckResult {
+  orphansDetected: number;
+  tasksRecovered: string[];
+  records: WorkerRecoveryRecord[];
+}
+
+export interface IdempotencyRecord {
+  idempotencyKey: string;
+  scope: string;
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  payloadHash: string;
+  responsePayload?: unknown;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface DLQRecord {
+  dlqId: string;
+  eventId: string;
+  source: string;
+  attempts: number;
+  lastError: string;
+  payload: unknown;
+  createdAt: string;
+  nextAction: 'RETRY' | 'DISCARD' | 'MANUAL_INSPECTION';
+  resolvedAt?: string;
+}
+
+export interface EventReplayRequest {
+  targetChannel?: string;
+  fromTimestamp?: string;
+  eventIds?: string[];
+  dryRun?: boolean;
+}
+
+export interface EventReplayResult {
+  replayedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  durationMs: number;
+  details: { eventId: string; status: 'REPLAYED' | 'SKIPPED_IDEMPOTENT' | 'FAILED'; error?: string }[];
+}
+
+export type ReconciliationType = 'tasks' | 'executions' | 'graph' | 'cost' | 'workforce' | 'portfolio';
+export type ReconciliationStatus = 'CONSISTENT' | 'RECONCILIATION_REQUIRED' | 'RECONCILED';
+
+export interface ReconciliationReport {
+  reconciliationId: string;
+  type: ReconciliationType;
+  status: ReconciliationStatus;
+  timestamp: string;
+  discrepanciesFound: number;
+  discrepancies: {
+    entityId: string;
+    field: string;
+    postgresValue: unknown;
+    projectedValue: unknown;
+    remedyApplied?: string;
+  }[];
+  durationMs: number;
+}
+
+export type BackupDatabaseType = 'POSTGRESQL' | 'NEO4J' | 'REDIS';
+export type BackupRetentionTier = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+
+export interface BackupRecord {
+  backupId: string;
+  database: BackupDatabaseType;
+  scope: 'LOGICAL' | 'WAL' | 'GRAPH_STRUCTURE' | 'KEY_SNAPSHOT';
+  encrypted: boolean;
+  cipher?: string;
+  checksumSha256: string;
+  storageLocation: string;
+  sizeBytes: number;
+  retentionTier: BackupRetentionTier;
+  createdAt: string;
+  verifiedAt?: string;
+  expiresAt: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RestoreVerificationReport {
+  restoreTestId: string;
+  backupId: string;
+  database: BackupDatabaseType;
+  testedAt: string;
+  status: 'SUCCESS' | 'INTEGRITY_MISMATCH' | 'CORRUPTED' | 'QUERY_FAILED';
+  durationMs: number;
+  entitiesVerified: {
+    projects: number;
+    tasks: number;
+    executions: number;
+    agents: number;
+    workforce: number;
+    portfolio: number;
+    decisions: number;
+    memoryReferences: number;
+    costSnapshots: number;
+    automationDefinitions: number;
+  };
+  integrityCheckPassed: boolean;
+  testQueryResults: {
+    query: string;
+    expectedRows: number;
+    actualRows: number;
+    passed: boolean;
+  }[];
+  errorMessage?: string;
+}
+
+export interface RPORTOStatus {
+  subsystem: string;
+  targetRPOSeconds: number;
+  targetRTOSeconds: number;
+  actualEstimatedRPOSeconds: number;
+  actualEstimatedRTOSeconds: number;
+  compliant: boolean;
+  rationale: string;
+}
+
+export type DisasterRecoveryLevel =
+  | 'LEVEL_1_SINGLE_SERVICE'
+  | 'LEVEL_2_APPLICATION_CRASH'
+  | 'LEVEL_3_DATABASE_CORRUPTION'
+  | 'LEVEL_4_HOST_FAILURE'
+  | 'LEVEL_5_COMPLETE_SITE_LOSS';
+
+export interface DegradedModeState {
+  neo4jDegraded: boolean;
+  graphRagAvailable: boolean;
+  ollamaDegraded: boolean;
+  aiRouterFallbackActive: boolean;
+  antigravityDegraded: boolean;
+  engineeringInWaitingProvider: boolean;
+  networkDegraded: boolean;
+  localOperationsIsolated: boolean;
+  notes: string[];
+}
+
+export interface TraceContext {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  correlationId: string;
+  sampled: boolean;
+}
+
+export interface SpanRecord {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  name: string;
+  startTime: string;
+  endTime?: string;
+  durationMs?: number;
+  attributes: Record<string, unknown>;
+  status: 'OK' | 'ERROR';
+  errorMessage?: string;
+}
+
+export interface MetricSample {
+  metricName: string;
+  value: number;
+  unit: string;
+  labels: Record<string, string>;
+  timestamp: string;
+}
+
+export type AlertSeverity = 'INFO' | 'WARNING' | 'HIGH' | 'CRITICAL';
+
+export interface AlertRecord {
+  alertId: string;
+  severity: AlertSeverity;
+  source: string;
+  reason: string;
+  impact: string;
+  recommendedAction: string;
+  runbook: string;
+  timestamp: string;
+  acknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  resolved: boolean;
+  resolvedAt?: string;
+}
+
+export interface SLODefinition {
+  sloId: string;
+  name: string;
+  service: string;
+  targetPercentage: number;
+  currentPercentage: number;
+  windowPeriod: string;
+  errorBudgetPercentageRemaining: number;
+  status: 'HEALTHY' | 'AT_RISK' | 'BREACHED';
+}
+
+export interface EmergencyModeState {
+  maintenanceMode: boolean;
+  maintenanceReason?: string;
+  readOnlyMode: boolean;
+  readOnlyReason?: string;
+  safeMode: boolean;
+  safeModeReason?: string;
+  recoveryMode: boolean;
+  recoveryOperator?: string;
+  globalAutonomyPaused: boolean;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface ResourceGovernanceMetrics {
+  cpuUsagePercent: number;
+  memoryUsagePercent: number;
+  memoryUsedMb: number;
+  memoryTotalMb: number;
+  diskUsagePercentC: number;
+  diskFreeBytesC: number;
+  diskUsagePercentD: number;
+  diskFreeBytesD: number;
+  activeWorkerCount: number;
+  maxWorkerLimit: number;
+  ollamaConcurrency: number;
+  ollamaMaxConcurrency: number;
+  diskStatus: 'INFO' | 'WARNING' | 'CRITICAL';
+}
+
+export interface ArchitectureDriftReport {
+  timestamp: string;
+  driftDetected: boolean;
+  findings: {
+    category: 'TOPOLOGY' | 'SERVICE' | 'DEPENDENCY' | 'PORT';
+    expected: string;
+    actual: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  }[];
+}
+
+export interface ConfigurationDriftReport {
+  timestamp: string;
+  driftDetected: boolean;
+  modifiedKeys: string[];
+  missingKeys: string[];
+  unexpectedKeys: string[];
+}
+
+export interface SecurityDriftReport {
+  timestamp: string;
+  driftDetected: boolean;
+  openUnexpectedPorts: number[];
+  unrestrictedFilePermissions: string[];
+  staleCertificatesCount: number;
+  exposedSecretsFound: number;
+}
+
+export interface OperationalScorecard {
+  generatedAt: string;
+  environment: string;
+  categories: {
+    availability: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    security: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    backups: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    recovery: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    performance: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    queueHealth: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    providerHealth: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    autonomySafety: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+    dataIntegrity: { score: number; status: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL'; summary: string };
+  };
+}
+
+// ==========================================================
+// Phase 11: Telegram Command & Communication Layer Types
+// ==========================================================
+
+export interface OwnerMessage {
+  conversationId: string;
+  channel: 'telegram';
+  senderId: string;
+  senderUsername?: string;
+  senderFirstName?: string;
+  senderLastName?: string;
+  messageId: string;
+  text: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TelegramUser {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
+}
+
+export interface TelegramChat {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  type: 'private' | 'group' | 'supergroup' | 'channel';
+}
+
+export interface TelegramRawMessage {
+  message_id: number;
+  from?: TelegramUser;
+  chat: TelegramChat;
+  date: number;
+  text?: string;
+  reply_to_message?: TelegramRawMessage;
+}
+
+export interface TelegramCallbackQuery {
+  id: string;
+  from: TelegramUser;
+  message?: TelegramRawMessage;
+  inline_message_id?: string;
+  chat_instance?: string;
+  data?: string;
+}
+
+export interface TelegramUpdate {
+  update_id: number;
+  message?: TelegramRawMessage;
+  edited_message?: TelegramRawMessage;
+  callback_query?: TelegramCallbackQuery;
+}
+
+export interface InlineKeyboardButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+export interface InlineKeyboardMarkup {
+  inline_keyboard: InlineKeyboardButton[][];
+}
+
+export interface TelegramSendMessageOptions {
+  chat_id: number | string;
+  text: string;
+  parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML';
+  reply_to_message_id?: number;
+  reply_markup?: InlineKeyboardMarkup;
+}
+
+export interface TelegramEditMessageOptions {
+  chat_id: number | string;
+  message_id: number;
+  text: string;
+  parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML';
+  reply_markup?: InlineKeyboardMarkup;
+}
+
+export type TelegramCommandType =
+  | 'START'
+  | 'HELP'
+  | 'STATUS'
+  | 'TASKS'
+  | 'AGENTS'
+  | 'PROJECTS'
+  | 'INCIDENTS'
+  | 'APPROVALS'
+  | 'REPORT'
+  | 'PAUSE'
+  | 'RESUME'
+  | 'NATURAL_LANGUAGE'
+  | 'UNKNOWN';
+
+export interface TelegramIdentity {
+  telegramId: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  role: 'OWNER' | 'ADMIN' | 'UNAUTHORIZED';
+  isAuthorized: boolean;
+  lastSeenAt: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TelegramConversation {
+  conversationId: string;
+  chatId: string;
+  ownerId: string;
+  status: 'ACTIVE' | 'ARCHIVED';
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TelegramConversationMessage {
+  messageId: string;
+  conversationId: string;
+  direction: 'INBOUND' | 'OUTBOUND';
+  senderId: string;
+  text: string;
+  correlationId: string;
+  timestamp: string;
+}
+
+export interface TelegramApproval {
+  approvalId: string;
+  conversationId?: string;
+  chatId?: string | number;
+  messageId?: number;
+  actionTitle: string;
+  actionDescription: string;
+  riskLevel: RiskLevel;
+  planSteps: string[];
+  impact: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+  requestedBy: string;
+  respondedBy?: string;
+  responseReason?: string;
+  correlationId: string;
+  createdAt: string;
+  expiresAt: string;
+  respondedAt?: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface TelegramNotification {
+  notificationId: string;
+  recipientId: string;
+  type: 'TASK_COMPLETED' | 'TASK_FAILED' | 'INCIDENT' | 'APPROVAL_REQUIRED' | 'DAILY_BRIEFING' | 'SYSTEM_ALERT';
+  severity: 'INFO' | 'WARNING' | 'HIGH' | 'CRITICAL';
+  title: string;
+  message: string;
+  correlationId?: string;
+  metadata?: Record<string, unknown>;
+  status: 'PENDING' | 'SENT' | 'FAILED' | 'SUPPRESSED';
+  sentAt?: string;
+  timestamp: string;
+}
+
+export interface TelegramAuditLog {
+  auditId: string;
+  correlationId: string;
+  updateId?: number;
+  senderId: string;
+  username?: string;
+  action: string;
+  authorized: boolean;
+  details: string;
+  ipAddress?: string;
+  timestamp: string;
+}
+
+export interface OrchestratorResult {
+  type: 'TEXT' | 'APPROVAL_REQUIRED' | 'TASK_CREATED' | 'SYSTEM_STATE' | 'ERROR';
+  responseMessage: string;
+  inlineKeyboard?: InlineKeyboardMarkup;
+  taskId?: string;
+  approvalId?: string;
+  correlationId: string;
+  metadata?: Record<string, unknown>;
+}
+
+// ==========================================================
+// PHASE 13 — AI WORKFORCE MATURITY & ORGANIZATIONAL INTELLIGENCE
+// ==========================================================
+
+export type OrganizationalHierarchyLevel =
+  | 'VISION'
+  | 'STRATEGIC'
+  | 'ANNUAL'
+  | 'QUARTERLY'
+  | 'MONTHLY'
+  | 'PROJECT'
+  | 'INITIATIVE';
+
+export type OrgObjectiveType =
+  | 'STRATEGIC'
+  | 'PRODUCT'
+  | 'ENGINEERING'
+  | 'OPERATIONAL'
+  | 'SECURITY'
+  | 'RESEARCH'
+  | 'BUSINESS'
+  | 'PERSONAL_OWNER';
+
+export type OrgObjectiveStatus =
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'AT_RISK'
+  | 'ACHIEVED'
+  | 'MISSED'
+  | 'CANCELLED';
+
+export interface OrgObjective {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  parentObjectiveId?: string;
+  hierarchyLevel: OrganizationalHierarchyLevel;
+  type: OrgObjectiveType;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: OrgObjectiveStatus;
+  startDate: string;
+  targetDate: string;
+  successCriteria: string[];
+  measurementMethod: string;
+  riskLevel: RiskLevel;
+  progressPercentage: number;
+  projectId?: string;
+  initiatives?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Initiative {
+  id: string;
+  objectiveId: string;
+  name: string;
+  description: string;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'BLOCKED' | 'COMPLETED' | 'CANCELLED';
+  owner: string;
+  targetDate?: string;
+  taskIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskObjectiveTrace {
+  taskId: string;
+  taskTitle: string;
+  initiativeId?: string;
+  initiativeName?: string;
+  objectiveId: string;
+  objectiveName: string;
+  parentObjectiveName?: string;
+  strategicAlignmentReason: string;
+}
+
+export type TaskClassification =
+  | 'LOW_RISK_REPETITIVE'
+  | 'NORMAL_ENGINEERING'
+  | 'REVIEW_REQUIRED'
+  | 'HIGH_RISK'
+  | 'PRODUCTION_CRITICAL'
+  | 'HUMAN_ONLY';
+
+export interface PriorityDimensionScore {
+  businessImpact: number; // 1-5
+  urgency: number; // 1-5
+  dependencyCount: number; // 1-5
+  risk: number; // 1-5
+  strategicAlignment: number; // 1-5
+  customerImpact: number; // 1-5
+  securityImpact: number; // 1-5
+  effort: number; // 1-5
+  deadlineProximity: number; // 1-5
+  reversibility: number; // 1-5
+}
+
+export interface PriorityEvaluationResult {
+  taskId: string;
+  score: number; // 0 - 100
+  priorityTier: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  reasons: string[];
+  dimensions: PriorityDimensionScore;
+  conflictDetected: boolean;
+  conflictDetails?: string;
+  recommendedSequenceOrder?: number;
+}
+
+export interface PriorityConflictResolution {
+  conflictId: string;
+  detectedAt: string;
+  conflictType:
+    | 'TOO_MANY_HIGH_TASKS'
+    | 'DEADLINE_COLLISION'
+    | 'RESOURCE_CONTENTION'
+    | 'DEPENDENCY_BOTTLENECK'
+    | 'PRIORITY_INVERSION';
+  description: string;
+  availableAgentsCount: number;
+  highPriorityTasksCount: number;
+  recommendedSequence: Array<{
+    taskId: string;
+    title: string;
+    assignedAgent: string;
+    sequenceRank: number;
+    rationale: string;
+  }>;
+}
+
+export interface AgentWorkloadState {
+  agentId: string;
+  agentName: string;
+  role: AgentRole;
+  queuedCount: number;
+  assignedCount: number;
+  activeCount: number;
+  blockedCount: number;
+  waitingCount: number;
+  completedCount: number;
+  failedCount: number;
+  reworkCount: number;
+  concurrencyLimit: number;
+  utilizationPercent: number;
+  throughputPerHour: number;
+  averageCycleTimeMs: number;
+  averageLeadTimeMs: number;
+  averageWaitTimeMs: number;
+  failureRatePercent: number;
+  reworkRatePercent: number;
+  isOverloaded: boolean;
+  isUnderutilized: boolean;
+  reviewCapacityAvailable: boolean;
+}
+
+export interface WorkforceCapacityOverview {
+  totalAgents: number;
+  availableAgents: string[];
+  overloadedAgents: string[];
+  underutilizedAgents: string[];
+  totalActiveTasks: number;
+  totalQueuedTasks: number;
+  totalBlockedTasks: number;
+  systemUtilizationPercent: number;
+  bottleneckResource?: string;
+  capacityBlockedWork: string[];
+  timestamp: string;
+}
+
+export interface AgentPerformanceIndicator {
+  agentId: string;
+  agentName: string;
+  role: AgentRole;
+  completionReliability: number; // 0-100
+  verificationPassRate: number; // 0-100
+  averageCycleTimeMs: number;
+  reworkFrequency: number; // 0-100
+  costEfficiencyRatio: number;
+  escalationFrequency: number;
+  contextualFactors: {
+    taskDifficultyMix: { trivial: number; moderate: number; complex: number; critical: number };
+    highRiskRatio: number;
+    providerConstraintsEncountered: number;
+  };
+  summaryEvaluation: string;
+}
+
+export interface KPIDefinition {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  formula: string;
+  source: string;
+  period: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  target: number;
+  thresholds: { healthy: number; warning: number; critical: number };
+  measurementFrequency: string;
+  formulaVersion: string;
+}
+
+export interface KPISnapshot {
+  kpiId: string;
+  kpiName: string;
+  value: number;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  calculatedAt: string;
+  dataPeriod: { from: string; to: string };
+  sourceReferences: string[];
+  formulaVersion: string;
+  operationalDecisionGuidance: string;
+}
+
+export interface OrganizationalHealthDimension {
+  dimension: 'DELIVERY' | 'RELIABILITY' | 'SECURITY' | 'WORKFORCE' | 'COST' | 'OBJECTIVE';
+  score: number; // 0 - 100
+  status: 'OPTIMAL' | 'STABLE' | 'DEGRADED' | 'CRITICAL';
+  metrics: Record<string, number | string>;
+  evidence: string[];
+}
+
+export interface OrganizationalHealthOverview {
+  overallState: 'HEALTHY' | 'ATTENTION_NEEDED' | 'DEGRADED' | 'CRITICAL';
+  dimensions: Record<string, OrganizationalHealthDimension>;
+  evaluatedAt: string;
+}
+
+export interface OrganizationalBottleneck {
+  id: string;
+  type:
+    | 'AGENT_CAPACITY'
+    | 'QA_CAPACITY'
+    | 'APPROVAL_QUEUE'
+    | 'SINGLE_AGENT_DEPENDENCY'
+    | 'PROVIDER_QUOTA'
+    | 'GPU_CPU_RESOURCES'
+    | 'DATABASE'
+    | 'REDIS_QUEUE'
+    | 'EXTERNAL_API'
+    | 'HUMAN_APPROVAL';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  impact: string;
+  waitingCount: number;
+  availableCapacity: number;
+  affectedTasks: string[];
+  remediationRecommendation: string;
+  detectedAt: string;
+}
+
+export interface SinglePointOfFailure {
+  id: string;
+  category: 'CAPABILITY' | 'PROVIDER' | 'INFRASTRUCTURE' | 'APPROVAL' | 'DEPENDENCY';
+  entity: string;
+  riskDescription: string;
+  impactDescription: string;
+  mitigationAction: string;
+  detectedAt: string;
+}
+
+export interface KnowledgeQueryItem {
+  topic: string;
+  domain: string;
+  expertAgents: string[];
+  dependentProjects: string[];
+  keyArchitecturalDecisions: string[];
+  relatedIncidents: string[];
+  hotFiles: string[];
+  provenanceSources: string[];
+}
+
+export interface KnowledgeGap {
+  id: string;
+  domain: string;
+  capability: string;
+  documentationCount: number;
+  recentVerificationsCount: number;
+  riskLevel: RiskLevel;
+  actionProposed: string;
+  detectedAt: string;
+}
+
+export interface OrganizationalMemoryItem {
+  id: string;
+  category:
+    | 'ARCHITECTURAL_DECISION'
+    | 'INCIDENT_LESSON'
+    | 'SUCCESSFUL_RUNBOOK'
+    | 'FAILED_APPROACH'
+    | 'IMPORTANT_CONSTRAINT'
+    | 'REPEATED_PATTERN'
+    | 'VALIDATED_SOLUTION';
+  title: string;
+  summary: string;
+  content: string;
+  provenance: string;
+  source: string;
+  confidence: number;
+  scope: 'GLOBAL' | 'PROJECT_SPECIFIC';
+  projectId?: string;
+  visibility: 'INTERNAL' | 'PUBLIC';
+  promotedAt: string;
+}
+
+export interface LessonLearnedRecord {
+  id: string;
+  taskId?: string;
+  incidentId?: string;
+  title: string;
+  attempted: string;
+  worked: string;
+  failed: string;
+  rootCause: string;
+  shouldRepeat: string;
+  shouldAvoid: string;
+  systemKnowledgeChanges: string;
+  distinctions: {
+    facts: string[];
+    observations: string[];
+    hypotheses: string[];
+    recommendations: string[];
+  };
+  validated: boolean;
+  recordedAt: string;
+}
+
+export interface AutomationCandidate {
+  id: string;
+  patternName: string;
+  frequency: string;
+  occurrenceCount: number;
+  estimatedEffortHoursSaved: number;
+  currentManualSteps: string[];
+  proposedAutomation: string;
+  riskLevel: RiskLevel;
+  status: 'PROPOSED' | 'APPROVED' | 'REJECTED' | 'ACTIVE';
+  detectedAt: string;
+}
+
+export interface PortfolioProjectIntelligence {
+  projectId: string;
+  projectName: string;
+  status: string;
+  priorityRank: number;
+  objectiveAlignment: string[];
+  activeTasksCount: number;
+  blockedTasksCount: number;
+  assignedAgents: string[];
+  riskLevel: RiskLevel;
+  resourceConsumptionUsd: number;
+  completionProgressPercent: number;
+  crossProjectDependencies: string[];
+}
+
+export interface CrossProjectResourceConflict {
+  conflictId: string;
+  agentId: string;
+  agentName: string;
+  conflictingProjects: string[];
+  competingDeadlines: string[];
+  overallocationPercentage: number;
+  recommendedSequence: string;
+  detectedAt: string;
+}
+
+export interface CostIntelligenceBreakdown {
+  period: string;
+  totalCostUsd: number;
+  costByProject: Record<string, number>;
+  costByTask: Record<string, number>;
+  costByAgent: Record<string, number>;
+  costByModel: Record<string, number>;
+  costByProvider: Record<string, number>;
+  costPerSuccessfulTaskUsd: number;
+}
+
+export interface QualityIntelligenceOverview {
+  testPassRate: number;
+  reviewPassRate: number;
+  securityCheckPassRate: number;
+  rollbackCount: number;
+  reworkCount: number;
+  postDeploymentIncidentsCount: number;
+  humanCorrectionCount: number;
+  qualityScore: number;
+}
+
+export interface AutonomyMaturityMetrics {
+  automaticSuccesses: number;
+  automaticFailures: number;
+  humanInterventions: number;
+  approvalPassRate: number;
+  rollbackRate: number;
+  escalationRate: number;
+  classificationBreakdown: Record<TaskClassification, { total: number; autonomousSuccessRate: number }>;
+}
+
+export interface ExecutiveRecommendation {
+  recommendationId: string;
+  observationId: string;
+  category: 'CAPACITY' | 'BOTTLENECK' | 'PRIORITY' | 'QUALITY' | 'KNOWLEDGE' | 'COST' | 'SECURITY' | 'AUTOMATION';
+  observation: string;
+  evidence: string[];
+  impact: string;
+  suggestedAction: string;
+  confidence: number;
+  governanceRequirement: 'AUTONOMOUS_POLICY_ALLOWED' | 'HUMAN_APPROVAL_REQUIRED' | 'STRATEGIC_OWNER_ONLY';
+  status: 'PROPOSED' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'DISMISSED';
+  createdAt: string;
+}
+
+export interface OrganizationalBriefing {
+  briefingTimestamp: string;
+  deliverySummary: { completed: number; active: number; blocked: number };
+  capacitySummary: string;
+  bottleneckSummary: string;
+  objectiveSummary: string;
+  riskSummary: string;
+  knowledgeSummary: string;
+  recommendationSummary: string;
+  evidenceNotes: string[];
+}
+
+// ==========================================================
+// Phase 14: Self-Improving AI Organization Domain Types
+// ==========================================================
+
+export type EpistemicCategory = 'FACT' | 'OBSERVATION' | 'HYPOTHESIS' | 'RECOMMENDATION';
+
+export type NormalizedFailureCategory =
+  | 'AUTHENTICATION'
+  | 'AUTHORIZATION'
+  | 'DATABASE'
+  | 'NETWORK'
+  | 'PROVIDER'
+  | 'TOOL'
+  | 'AGENT'
+  | 'PLANNING'
+  | 'EXECUTION'
+  | 'TEST'
+  | 'DEPLOYMENT'
+  | 'CONFIGURATION'
+  | 'HUMAN_APPROVAL'
+  | 'EXTERNAL_DEPENDENCY'
+  | 'UNKNOWN';
+
+export interface LearningObservation {
+  id: string;
+  taskId?: string;
+  incidentId?: string;
+  category: NormalizedFailureCategory | 'PROCESS' | 'ROUTING' | 'TOOL' | 'PERFORMANCE' | 'KNOWLEDGE';
+  statement: string;
+  context: string;
+  sourceData: Record<string, unknown>;
+  confidence: number;
+  timestamp: string;
+}
+
+export interface StructuredLesson {
+  id: string;
+  observationIds: string[];
+  title: string;
+  facts: string[];
+  observations: string[];
+  hypotheses: string[];
+  recommendations: string[];
+  validated: boolean;
+  validatedAt?: string;
+  confidence: number;
+  scope: string;
+}
+
+export interface OrganizationalPattern {
+  id: string;
+  patternType:
+    | 'REPEATED_LOOP'
+    | 'BOTTLENECK'
+    | 'REWORK_HOTSPOT'
+    | 'FAILURE_CLUSTER'
+    | 'ROUTING_MISMATCH'
+    | 'TOOL_INEFFICIENCY'
+    | 'KNOWLEDGE_GAP'
+    | 'AUTOMATION_CANDIDATE';
+  signature: string;
+  occurrencesCount: number;
+  affectedSystems: string[];
+  confidence: number;
+  detectedAt: string;
+}
+
+export interface LearningHypothesis {
+  id: string;
+  statement: string;
+  underlyingPatternId?: string;
+  proposedBy: string;
+  status: 'FORMULATED' | 'TESTING' | 'VALIDATED' | 'REFUTED';
+  confidence: number;
+}
+
+export type ImprovementProposalStatus =
+  | 'PROPOSED'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'EXPERIMENTING'
+  | 'VALIDATED'
+  | 'ROLLED_BACK'
+  | 'SUPERSEDED';
+
+export type ChangeGovernanceTier = 'LOW_RISK' | 'MEDIUM_RISK' | 'HIGH_RISK' | 'CRITICAL';
+
+export interface ImprovementProposal {
+  id: string;
+  title: string;
+  description: string;
+  problem: string;
+  evidence: string[];
+  hypothesis: string;
+  expectedBenefit: string;
+  risk: ChangeGovernanceTier;
+  affectedSystems: string[];
+  proposedChange: string;
+  validationPlan: string;
+  rollbackPlan: string;
+  confidence: number;
+  status: ImprovementProposalStatus;
+  governanceTier: ChangeGovernanceTier;
+  approvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrganizationalExperimentStatus =
+  | 'DRAFT'
+  | 'APPROVED'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'EVALUATED'
+  | 'ABORTED';
+
+export interface OrganizationalExperiment {
+  id: string;
+  proposalId: string;
+  hypothesis: string;
+  baseline: { metricName: string; baselineValue: number };
+  change: { description: string; targetValue: number };
+  scope: string;
+  successMetric: string;
+  risk: ChangeGovernanceTier;
+  durationHours: number;
+  status: OrganizationalExperimentStatus;
+  result?: ExperimentResult;
+  createdAt: string;
+}
+
+export interface ExperimentResult {
+  experimentId: string;
+  baselineMetric: number;
+  candidateMetric: number;
+  delta: number;
+  deltaPercentage: number;
+  successOutcome: boolean;
+  conclusion: string;
+  measuredAt: string;
+}
+
+export interface ChangeRecord {
+  id: string;
+  proposalId: string;
+  changeType: 'ROUTING_POLICY' | 'RUNBOOK_UPDATE' | 'PROMPT_TEMPLATE' | 'WORKFLOW_RULE' | 'TOOLCHAIN_CONFIG';
+  whatChanged: string;
+  why: string;
+  proposedBy: string;
+  approvedBy: string;
+  evidence: string[];
+  implementationDetails: string;
+  rollbackPlan: string;
+  status: 'ACTIVE' | 'ROLLED_BACK';
+  appliedAt: string;
+}
+
+export type OwnerFeedbackClassification =
+  | 'APPROVAL'
+  | 'CORRECTION'
+  | 'PREFERENCE'
+  | 'CONSTRAINT'
+  | 'LESSON'
+  | 'POLICY_REQUEST';
+
+export interface OwnerFeedback {
+  id: string;
+  messageId?: string;
+  source: 'TELEGRAM' | 'WEB' | 'API';
+  rawText: string;
+  classification: OwnerFeedbackClassification;
+  normalizedFeedback: string;
+  appliedTo?: string;
+  createdAt: string;
+}
+
+export interface OwnerPreference {
+  id: string;
+  key: string;
+  preference: string;
+  scope: string;
+  confidence: number;
+  source: string;
+  status: 'ACTIVE' | 'REVOKED';
+  recordedAt: string;
+}
+
+export type KnowledgeLifecycleState = 'ACTIVE' | 'STALE' | 'UNDER_REVIEW' | 'DEPRECATED';
+
+export interface KnowledgeLifecycle {
+  knowledgeId: string;
+  title: string;
+  state: KnowledgeLifecycleState;
+  createdAt: string;
+  validatedAt: string;
+  lastUsedAt: string;
+  staleThresholdDays: number;
+  reviewRequired: boolean;
+  notes?: string;
+}
+
+export interface ImprovementImpact {
+  proposalId: string;
+  title: string;
+  metricsBefore: Record<string, number>;
+  metricsAfter: Record<string, number>;
+  measuredDelta: {
+    qaWaitTimeDeltaPercent: number;
+    reworkDeltaPercent: number;
+    costDeltaPercent: number;
+    latencyDeltaPercent?: number;
+    humanInterventionDeltaPercent?: number;
+  };
+  conclusion: string;
+  measuredAt: string;
+}
+
+export interface ProcessMiningTrace {
+  traceId: string;
+  taskId: string;
+  transitions: Array<{ fromState: string; toState: string; durationMs: number; timestamp: string }>;
+  loopCount: number;
+  waitingDurationMs: number;
+  reworkCount: number;
+  detectedFriction: string[];
+}
+
+export interface PlanningEvaluation {
+  taskId: string;
+  plannedScope: string[];
+  actualScope: string[];
+  plannedStepsCount: number;
+  actualStepsCount: number;
+  plannedEffortHours: number;
+  actualEffortHours: number;
+  accuracyScore: number;
+  planningDefects: string[];
+}
+
+export interface RoutingOptimizationRecommendation {
+  taskClass: string;
+  recommendedAgent: string;
+  recommendedModel: string;
+  recommendedProvider: LLMProviderType;
+  recommendedToolchain: string[];
+  rationale: string;
+  confidence: number;
+}
+
+export interface ToolSelectionMetric {
+  toolName: string;
+  taskType: string;
+  invocationsCount: number;
+  successRate: number;
+  avgLatencyMs: number;
+  avgCostUsd: number;
+  failureRate: number;
+}
+
+export interface RunbookOptimizationCandidate {
+  runbookId: string;
+  title: string;
+  currentStepsCount: number;
+  proposedStepsCount: number;
+  obsoleteStepIndices: number[];
+  reason: string;
+  status: 'PROPOSED' | 'APPROVED' | 'ACTIVE';
+}
+
+export interface IncidentLearningRecord {
+  incidentId: string;
+  rootCause: string;
+  contributingFactors: string[];
+  recoveryWeaknesses: string[];
+  incidentFamily: string;
+  preventiveAction: string;
+  createdAt: string;
+}
+
+export interface ContinuousImprovementMetrics {
+  proposalsCreated: number;
+  improvementsValidated: number;
+  improvementsRejected: number;
+  improvementsRolledBack: number;
+  measuredBenefitSummary: string;
+  reworkReductionPercent: number;
+  failureReductionPercent: number;
+  costChangePercent: number;
+  humanInterventionChangePercent: number;
+}
+
+export interface LearningReport {
+  period: string;
+  observationsCount: number;
+  validatedLessonsCount: number;
+  recurringPatternsCount: number;
+  improvementProposalsCount: number;
+  experimentsCompletedCount: number;
+  validatedImprovementsCount: number;
+  rollbacksCount: number;
+  measuredImpact: {
+    qaWaitTimeDeltaPercent: number;
+    reworkDeltaPercent: number;
+    costDeltaPercent: number;
+    humanInterventionDeltaPercent: number;
+  };
+  summaryText: string;
+  generatedAt: string;
+}
+
+// ==========================================================
+// Phase 15: Strategic Autonomy & Long-Horizon Execution Types
+// ==========================================================
+
+export type ObjectiveHorizon = 'SHORT' | 'MEDIUM' | 'LONG';
+
+export type MilestoneStatus =
+  | 'ON_TRACK'
+  | 'AT_RISK'
+  | 'BLOCKED'
+  | 'MISSED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type StrategicAutonomyLevel =
+  | 'S0_OBSERVE'
+  | 'S1_ADVISE'
+  | 'S2_EXECUTE_ROUTINE'
+  | 'S3_ADAPT_WITHIN_BOUNDS'
+  | 'S4_STRATEGIC_ESCALATION';
+
+export interface StrategicObjective {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  horizon: ObjectiveHorizon;
+  strategicIntent: string;
+  successDefinition: string[];
+  constraints: string[];
+  budgetLimitUsd: number;
+  resourceLimitHours: number;
+  deadline: string;
+  milestonesCount?: number;
+  riskTolerance: RiskLevel;
+  ownerAuthority: string;
+  reviewCadence: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'MILESTONE_BASED';
+  status: OrgObjectiveStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StrategicProgram {
+  id: string;
+  name: string;
+  objectiveId: string;
+  owner: string;
+  description: string;
+  startDate: string;
+  targetDate: string;
+  status: 'PLANNED' | 'ACTIVE' | 'COMPLETED' | 'PAUSED';
+  priority: TaskPriority;
+  budgetUsd: number;
+  resourceConstraints: string[];
+  successCriteria: string[];
+  riskProfile: RiskLevel;
+  createdAt: string;
+}
+
+export interface StrategicMilestone {
+  id: string;
+  programId: string;
+  projectId?: string;
+  name: string;
+  description: string;
+  targetDate: string;
+  successCriteria: string[];
+  dependencies: string[];
+  status: MilestoneStatus;
+  risk: RiskLevel;
+  evidenceRequirements: string[];
+  actualCompletionDate?: string;
+  progressPercent: number;
+}
+
+export interface LongHorizonPlan {
+  id: string;
+  objectiveId: string;
+  programId: string;
+  version: number;
+  title: string;
+  milestones: StrategicMilestone[];
+  status: 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
+  createdAt: string;
+  approvedBy: string;
+  changeReason?: string;
+}
+
+export interface PlanVersionRecord {
+  version: number;
+  planId: string;
+  objectiveId: string;
+  createdAt: string;
+  reason: string;
+  trigger: string;
+  changedScope: string[];
+  changedTimeline: string[];
+  changedDependencies: string[];
+  changedResources: string[];
+  approvedBy: string;
+}
+
+export interface PlanDeviationReport {
+  planId: string;
+  objectiveId: string;
+  deviationDetected: boolean;
+  timelineDeviationDays: number;
+  scopeDriftDetected: boolean;
+  budgetDriftPercentage: number;
+  capacityDriftPercentage: number;
+  qualityDriftDetected: boolean;
+  riskEscalationDetected: boolean;
+  affectedMilestoneIds: string[];
+  rootCause: string;
+  impactSummary: string;
+  detectedAt: string;
+}
+
+export interface StrategicRisk {
+  id: string;
+  objectiveId: string;
+  risk: string;
+  probability: 'LOW' | 'MEDIUM' | 'HIGH';
+  impact: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  exposure: number;
+  owner: string;
+  mitigation: string;
+  contingency: string;
+  status: 'IDENTIFIED' | 'MITIGATING' | 'OCCURRED' | 'RETIRED';
+  evidence: string[];
+  reviewDate: string;
+}
+
+export interface ScenarioSimulation {
+  scenarioId: string;
+  scenarioName: string;
+  baselineConditions: Record<string, unknown>;
+  injectedVariables: Record<string, unknown>;
+  simulationResults: {
+    timelineEffectDays: number;
+    resourceEffectHours: number;
+    costEffectUsd: number;
+    riskEffect: string;
+    dependencyImpactCount: number;
+  };
+  confidence: number;
+  simulatedAt: string;
+}
+
+export interface StrategicReplanningOption {
+  optionId: string;
+  title: string;
+  strategy:
+    | 'SEQUENCE_CHANGE'
+    | 'RESOURCE_REASSIGNMENT'
+    | 'SCOPE_REDUCTION'
+    | 'SCOPE_EXPANSION'
+    | 'DEADLINE_ADJUSTMENT'
+    | 'PAUSE'
+    | 'SPLIT_MERGE';
+  expectedOutcome: string;
+  estimatedCostUsd: number;
+  estimatedEffortHours: number;
+  risk: RiskLevel;
+  dependencyImpact: string[];
+  qualityImplications: string;
+  confidence: number;
+  requiresOwnerApproval: boolean;
+}
+
+export interface StrategicDecisionRequest {
+  requestId: string;
+  objectiveId: string;
+  issue: string;
+  evidence: string[];
+  options: StrategicReplanningOption[];
+  tradeOffsSummary: string;
+  decisionDeadline: string;
+  impactIfNoDecision: string;
+  status: 'PENDING' | 'DECIDED' | 'EXPIRED';
+  decidedOptionId?: string;
+  decidedAt?: string;
+}
+
+export interface EarlyWarning {
+  warningId: string;
+  objectiveId: string;
+  milestoneId?: string;
+  observation: string;
+  evidence: string[];
+  impact: string;
+  confidence: number;
+  recommendedAction: string;
+  severity: 'ATTENTION' | 'WARNING' | 'CRITICAL';
+  emittedAt: string;
+}
+
+export interface StrategicBriefing {
+  objectiveName: string;
+  planVersion: string;
+  milestonesSummary: {
+    completed: number;
+    inProgress: number;
+    atRisk: number;
+    blocked: number;
+  };
+  currentDeviation: string;
+  cause: string;
+  impact: string;
+  capacity: {
+    engineeringPercent: number;
+    qaPercent: number;
+  };
+  recommendation: string;
+  ownerDecisionRequired: boolean;
+  evidenceNotes: string[];
+  generatedAt: string;
+}
+
+export interface LongHorizonPilotLifecycle {
+  pilotId: string;
+  objectiveId: string;
+  objectiveName: string;
+  planVersion: string;
+  milestones: StrategicMilestone[];
+  currentStage:
+    | 'OBJECTIVE'
+    | 'PLAN'
+    | 'EXECUTION'
+    | 'DEVIATION'
+    | 'REPLANNING'
+    | 'CONTINUED_EXECUTION'
+    | 'MEASUREMENT'
+    | 'FINAL_OUTCOME';
+  completedTasksCount: number;
+  activeTasksCount: number;
+  measuredReliabilityScore: number;
+  verifiedEvidence: string[];
+  finalVerdict: string;
+}
+
+
+
+
+
 
 
 

@@ -3,45 +3,70 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+
+  /* === KDI STUDIO DESIGN TOKENS === */
+  --paper: #eee9df;      /* Karton krem kertas background */
+  --sheet: #fffcf5;      /* Lembar putih susu hangat */
+  --ink: #2a2622;        /* Tinta hitam hangat / charcoal */
+  --ink-2: #5c554b;      /* Tinta abu-abu hangat sekunder */
+  --line: #b4ae9f;       /* Garis pembatas karton */
+  --hover: #e3dccd;      /* Hover warna kertas */
+  --accent: #385747;     /* Hijau aksen */
+  --accent-terracotta: #c2410c;
+  --accent-amber: #d97706;
 }
 
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #0b0f17;
-  color: #f1f5f9;
+  font-family: 'Archivo', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism & Sheet utility */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(255, 252, 245, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(42, 38, 34, 0.05);
 }
 
 .glass-panel-subtle {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(238, 233, 223, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar in Warm Paper Tone */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f17;
+  background: var(--paper);
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--line);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--ink-2);
+}
+
+/* === KDI ANIMATIONS === */
+@keyframes fadeInOut {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes bounceDot {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }

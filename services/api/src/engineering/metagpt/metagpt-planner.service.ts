@@ -108,8 +108,54 @@ export class MetaGPTPlannerService {
     repository: string,
     priority: TaskPriority
   ): Array<Partial<EngineeringTask>> {
+    const isAudit = goal.toLowerCase().includes('audit');
     const isBugFix = goal.toLowerCase().includes('bug') || goal.toLowerCase().includes('fix');
     const isFeature = goal.toLowerCase().includes('feature') || goal.toLowerCase().includes('add') || goal.toLowerCase().includes('implement');
+
+    if (isAudit) {
+      return [
+        {
+          title: `Architecture analysis & threat modeling: ${goal}`,
+          description: `Analyze system architecture, boundary contracts, and trust domains for ${goal}`,
+          type: 'PLANNING' as TaskType,
+          agentRole: 'SYSTEM_ARCHITECT',
+          repository,
+          dependencies: [],
+          riskLevel: 'LOW',
+          requiresHumanApproval: false,
+        },
+        {
+          title: `Backend implementation & code inspection: ${goal}`,
+          description: `Inspect backend implementation, authorization logic, and error handlers for ${goal}`,
+          type: 'CODING' as TaskType,
+          agentRole: 'SOFTWARE_ENGINEER',
+          repository,
+          dependencies: [],
+          riskLevel: 'LOW',
+          requiresHumanApproval: false,
+        },
+        {
+          title: `QA validation & test suite execution: ${goal}`,
+          description: `Execute automated test suite, verify regressions, and validate assertions for ${goal}`,
+          type: 'TESTING' as TaskType,
+          agentRole: 'QA_ENGINEER',
+          repository,
+          dependencies: [],
+          riskLevel: 'LOW',
+          requiresHumanApproval: false,
+        },
+        {
+          title: `Security review & vulnerability assessment: ${goal}`,
+          description: `Perform SAST scan, credential exposure review, and policy compliance audit for ${goal}`,
+          type: 'SECURITY' as TaskType,
+          agentRole: 'SECURITY_ENGINEER',
+          repository,
+          dependencies: [],
+          riskLevel: 'LOW',
+          requiresHumanApproval: false,
+        },
+      ];
+    }
 
     if (isBugFix) {
       return [

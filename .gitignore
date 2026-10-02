@@ -101,3 +101,8 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Scratch and ephemeral test artifacts
+scratch/test-agy-edit/
+services/api/scratch/
+fixtures/**/.git/

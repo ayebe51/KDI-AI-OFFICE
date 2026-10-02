@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, NotFoundException } from '@nestjs/common';
 import { TasksService } from './tasks.service.js';
 
 @Controller('tasks')
@@ -20,7 +20,38 @@ export class TasksController {
   }
 
   @Post()
-  createTask(@Body() body: { title: string; description: string }) {
-    return this.tasksService.createTask(body.title, body.description);
+  createTask(
+    @Body()
+    body: {
+      title: string;
+      description: string;
+      assignedAgent?: string;
+      status?: string;
+    }
+  ) {
+    return this.tasksService.createTask(
+      body.title,
+      body.description,
+      body.assignedAgent,
+      body.status
+    );
+  }
+
+  @Patch(':id')
+  updateTask(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      status?: string;
+      assignedAgent?: string;
+      result?: string;
+      description?: string;
+    }
+  ) {
+    const updated = this.tasksService.updateTask(id, body as any);
+    if (!updated) {
+      throw new NotFoundException(`Task ${id} not found`);
+    }
+    return updated;
   }
 }

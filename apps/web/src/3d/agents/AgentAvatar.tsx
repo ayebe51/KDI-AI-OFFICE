@@ -81,32 +81,22 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
     [agent.currentState, agent.activityState]
   );
 
-  // Torso material
-  const torsoMat = useMaterial({
-    diffuse: roleColor,
-    metalness: 0.2,
-    gloss: 0.65,
-  });
+  // Skin
+  const skinMat = useMaterial({ diffuse: '#f5c5a3', gloss: 0.3 });
+  // Shirt — role color
+  const torsoMat = useMaterial({ diffuse: roleColor, metalness: 0.05, gloss: 0.5 });
+  // Pants — dark charcoal
+  const pantsMat = useMaterial({ diffuse: '#374151', gloss: 0.3 });
+  // Shoes
+  const shoesMat = useMaterial({ diffuse: '#1c1917', gloss: 0.6 });
+  // Hair
+  const hairMat = useMaterial({ diffuse: '#2d1a06', gloss: 0.2 });
 
-  // Stylized head material
-  const headMat = useMaterial({
-    diffuse: '#fcd34d',
-    gloss: 0.5,
-  });
-
-  // Emissive visor material
-  const visorMat = useMaterial({
-    diffuse: visualConfig.emissiveColor,
-    emissive: visualConfig.emissiveColor,
-    emissiveIntensity: visualConfig.emissiveIntensity,
-    gloss: 0.9,
-  });
-
-  // Overhead holographic halo
+  // Overhead holographic halo (status indicator)
   const haloMat = useMaterial({
     diffuse: visualConfig.color,
     emissive: visualConfig.color,
-    emissiveIntensity: 0.8,
+    emissiveIntensity: 0.9,
     gloss: 0.8,
   });
 
@@ -189,27 +179,72 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
       onClick={handleClick}
       onPointerDown={handleClick}
     >
-      {/* 1. Torso Capsule */}
-      <Entity name="Torso" position={[0, 0.85, 0]} scale={[0.36, 0.6, 0.28]}>
+      {/* LEGS */}
+      <Entity name="LeftLeg" position={[-0.1, 0.28, 0]} scale={[0.12, 0.52, 0.12]}>
+        <Render type="capsule" material={pantsMat} castShadows={true} />
+      </Entity>
+      <Entity name="RightLeg" position={[0.1, 0.28, 0]} scale={[0.12, 0.52, 0.12]}>
+        <Render type="capsule" material={pantsMat} castShadows={true} />
+      </Entity>
+
+      {/* SHOES */}
+      <Entity name="LeftShoe" position={[-0.1, 0.04, 0.04]} scale={[0.13, 0.08, 0.2]}>
+        <Render type="box" material={shoesMat} castShadows={true} />
+      </Entity>
+      <Entity name="RightShoe" position={[0.1, 0.04, 0.04]} scale={[0.13, 0.08, 0.2]}>
+        <Render type="box" material={shoesMat} castShadows={true} />
+      </Entity>
+
+      {/* TORSO / SHIRT */}
+      <Entity name="Torso" position={[0, 0.7, 0]} scale={[0.30, 0.40, 0.19]}>
+        <Render type="box" material={torsoMat} castShadows={true} />
+      </Entity>
+
+      {/* ARMS */}
+      <Entity name="LeftArm" position={[-0.21, 0.76, 0]} scale={[0.09, 0.36, 0.09]}>
+        <Render type="capsule" material={torsoMat} castShadows={true} />
+      </Entity>
+      <Entity name="RightArm" position={[0.21, 0.76, 0]} scale={[0.09, 0.36, 0.09]}>
         <Render type="capsule" material={torsoMat} castShadows={true} />
       </Entity>
 
-      {/* 2. Stylized Head */}
-      <Entity name="Head" position={[0, 1.25, 0]} scale={[0.26, 0.26, 0.26]}>
-        <Render type="sphere" material={headMat} castShadows={true} />
+      {/* HANDS */}
+      <Entity name="LeftHand" position={[-0.21, 0.55, 0]} scale={[0.09, 0.09, 0.09]}>
+        <Render type="sphere" material={skinMat} />
+      </Entity>
+      <Entity name="RightHand" position={[0.21, 0.55, 0]} scale={[0.09, 0.09, 0.09]}>
+        <Render type="sphere" material={skinMat} />
       </Entity>
 
-      {/* 3. Glowing Visor */}
-      <Entity name="Visor" position={[0, 1.26, 0.12]} scale={[0.2, 0.05, 0.08]}>
-        <Render type="box" material={visorMat} />
+      {/* NECK */}
+      <Entity name="Neck" position={[0, 1.01, 0]} scale={[0.09, 0.11, 0.09]}>
+        <Render type="cylinder" material={skinMat} />
       </Entity>
 
-      {/* 4. Overhead Holographic Halo Ring */}
-      <Entity name="StatusHalo" position={[0, 1.5, 0]} scale={[0.32, 0.025, 0.32]}>
+      {/* HEAD */}
+      <Entity name="Head" position={[0, 1.3, 0]} scale={[0.24, 0.26, 0.23]}>
+        <Render type="sphere" material={skinMat} castShadows={true} />
+      </Entity>
+
+      {/* HAIR */}
+      <Entity name="Hair" position={[0, 1.42, 0]} scale={[0.22, 0.1, 0.20]}>
+        <Render type="sphere" material={hairMat} />
+      </Entity>
+
+      {/* EYES */}
+      <Entity name="LeftEye" position={[-0.07, 1.32, 0.12]} scale={[0.035, 0.035, 0.035]}>
+        <Render type="sphere" material={hairMat} />
+      </Entity>
+      <Entity name="RightEye" position={[0.07, 1.32, 0.12]} scale={[0.035, 0.035, 0.035]}>
+        <Render type="sphere" material={hairMat} />
+      </Entity>
+
+      {/* Overhead Status Halo Ring */}
+      <Entity name="StatusHalo" position={[0, 1.72, 0]} scale={[0.30, 0.022, 0.30]}>
         <Render type="cylinder" material={haloMat} />
       </Entity>
 
-      {/* 5. Ground Selection Halo (visible when selected) */}
+      {/* Ground Selection Ring */}
       {selected && (
         <Entity name="GroundSelectionRing" position={[0, 0.02, 0]} scale={[0.9, 0.02, 0.9]}>
           <Render type="cylinder" material={selectionRingMat} />

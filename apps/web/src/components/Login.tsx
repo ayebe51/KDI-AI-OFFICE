@@ -37,52 +37,52 @@ export const Login: React.FC<LoginProps> = ({ onLogin, apiUrl }) => {
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-md p-8 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-emerald-500 to-sky-500" />
+      <div className="glass-panel w-full max-w-md p-8 rounded-3xl border border-[#b4ae9f] bg-[#fffcf5] text-[#2a2622] shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-[#2a2622]" />
         
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
+          <div className="w-14 h-14 bg-[#eee9df] border border-[#b4ae9f] text-[#2a2622] rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-xs">
             <Shield className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-slate-100">KDI AI Office</h2>
-          <p className="text-xs text-slate-400 mt-1">Operator Authentication & Access Gate</p>
+          <h2 className="text-2xl font-heading font-bold text-[#2a2622]">KDI AI Office</h2>
+          <p className="text-xs text-[#5c554b] mt-1 font-mono">Operator Authentication & Access Gate</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs text-center">
+          <div className="mb-4 p-3 rounded-xl bg-[#c2410c]/10 border border-[#c2410c]/30 text-[#c2410c] text-xs text-center font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c554b] mb-1.5 font-mono">
               Operator Username
             </label>
             <div className="relative">
-              <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+              <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-[#5c554b]" />
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-amber-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] text-[#2a2622] text-sm focus:outline-none focus:border-[#2a2622] transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#5c554b] mb-1.5 font-mono">
               Password
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-[#5c554b]" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-amber-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] text-[#2a2622] text-sm focus:outline-none focus:border-[#2a2622] transition"
               />
             </div>
           </div>
@@ -90,7 +90,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, apiUrl }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-heading font-semibold text-sm transition shadow-lg shadow-amber-500/20 disabled:opacity-50"
+            className="w-full mt-2 py-3 px-4 rounded-xl bg-[#2a2622] hover:bg-[#385747] text-[#fffcf5] font-heading font-semibold text-sm transition shadow-sm disabled:opacity-50"
           >
             {loading ? 'Authenticating...' : 'Sign In as Internal Operator'}
           </button>
@@ -99,9 +99,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin, apiUrl }) => {
             <button
               type="button"
               onClick={() => onLogin('guest_public_token', 'Public Visitor')}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium transition"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#eee9df] hover:bg-[#e3dccd] text-[#2a2622] border border-[#b4ae9f] text-xs font-medium transition"
             >
-              Enter as Public Guest (Portfolio & 3D Showcase)
+              Enter as Public Guest (Portfolio & Virtual Office)
             </button>
           </div>
         </form>

@@ -36,6 +36,7 @@ import type {
   ParsedCommand,
   WSEventEnvelope,
 } from '@kdi/types';
+import { ReliabilityPanel } from './command-center/ReliabilityPanel.js';
 
 interface CommandCenterProps {
   apiUrl?: string;
@@ -47,7 +48,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 }) => {
   // Navigation inside Command Center
   const [subTab, setSubTab] = useState<
-    'overview' | 'objectives' | 'approvals' | 'incidents' | 'runbooks' | 'briefing' | 'health' | 'traces'
+    'overview' | 'objectives' | 'approvals' | 'incidents' | 'runbooks' | 'briefing' | 'health' | 'traces' | 'reliability'
   >('overview');
 
   // Command input state
@@ -700,6 +701,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         >
           Decision Traces & Audit
         </button>
+        <button
+          onClick={() => setSubTab('reliability')}
+          className={`px-3 py-1.5 rounded-lg transition ${
+            subTab === 'reliability'
+              ? 'bg-sky-400 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          Resilience & Hardening (Phase 10)
+        </button>
       </div>
 
       {/* TAB CONTENT 1: DAILY BRIEFING */}
@@ -1170,6 +1181,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </div>
         </div>
       )}
+
+      {/* TAB CONTENT 8: RESILIENCE & HARDENING (PHASE 10) */}
+      {subTab === 'reliability' && <ReliabilityPanel apiUrl={apiUrl} />}
     </div>
   );
 };

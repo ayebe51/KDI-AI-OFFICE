@@ -40,19 +40,26 @@ export class TasksService {
     return this.tasks.find((t) => t.taskId === id);
   }
 
-  createTask(title: string, description: string): TaskRecord {
+  createTask(title: string, description: string, assignedAgent?: string, status?: string): TaskRecord {
     const newTask: TaskRecord = {
-      taskId: `tsk_${Date.now()}`,
+      taskId: `tsk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       title,
       description,
-      status: 'PENDING',
+      status: (status as any) || 'PENDING',
       priority: 'MEDIUM',
       riskLevel: 'LOW',
-      assignedAgent: 'AI_MANAGER',
+      assignedAgent: (assignedAgent as any) || 'SOFTWARE_ENGINEER',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     this.tasks.unshift(newTask);
     return newTask;
+  }
+
+  updateTask(id: string, updates: Partial<TaskRecord>): TaskRecord | undefined {
+    const task = this.tasks.find((t) => t.taskId === id);
+    if (!task) return undefined;
+    Object.assign(task, updates, { updatedAt: new Date().toISOString() });
+    return task;
   }
 }

@@ -26,17 +26,17 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[#2a2622]">
       {/* 4-Pillar Comparative Bar Chart */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
+      <div className="glass-panel p-6 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] shadow-xs">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2.5">
-            <BarChart3 className="w-5 h-5 text-amber-400" />
-            <h4 className="text-sm font-heading font-bold text-slate-100">
+            <BarChart3 className="w-5 h-5 text-[#385747]" />
+            <h4 className="text-sm font-heading font-bold text-[#2a2622]">
               Multi-Perspective Cost & Valuation Comparison
             </h4>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">
+          <span className="text-[11px] text-[#5c554b] font-mono">
             Currency: {threeView.currency} / Monthly
           </span>
         </div>
@@ -45,16 +45,16 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
           {/* 1. Actual Human Compensation */}
           <div>
             <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-slate-300">
+              <span className="text-[#2a2622]">
                 1. Actual Human Total Compensation (Confidential Baseline)
               </span>
-              <span className="font-mono text-slate-100 font-bold">
+              <span className="font-mono text-[#2a2622] font-bold">
                 Rp {threeView.actualHumanCompensationMonthly.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="h-6 w-full bg-slate-950/80 rounded-lg overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-6 w-full bg-[#eee9df] rounded-lg overflow-hidden p-0.5 border border-[#b4ae9f]">
               <div
-                className="h-full bg-gradient-to-r from-slate-600 to-slate-400 rounded-md transition-all duration-500"
+                className="h-full bg-[#2a2622] rounded-md transition-all duration-500"
                 style={{ width: `${getWidthPercent(threeView.actualHumanCompensationMonthly)}%` }}
               />
             </div>
@@ -63,16 +63,16 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
           {/* 2. Illustrative Market Workforce Benchmark */}
           <div>
             <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-emerald-400 flex items-center space-x-1">
+              <span className="text-[#385747] font-semibold flex items-center space-x-1">
                 <span>2. Illustrative Market Workforce Benchmark ({threeView.equivalentFte} FTE)</span>
               </span>
-              <span className="font-mono text-emerald-400 font-bold">
+              <span className="font-mono text-[#385747] font-bold">
                 Rp {threeView.equivalentMarketBenchmarkMedianMonthly.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="h-6 w-full bg-slate-950/80 rounded-lg overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-6 w-full bg-[#eee9df] rounded-lg overflow-hidden p-0.5 border border-[#b4ae9f]">
               <div
-                className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-md transition-all duration-500"
+                className="h-full bg-[#385747] rounded-md transition-all duration-500"
                 style={{ width: `${getWidthPercent(threeView.equivalentMarketBenchmarkMedianMonthly)}%` }}
               />
             </div>
@@ -81,16 +81,16 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
           {/* 3. AI Operating Infrastructure Cost */}
           <div>
             <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-amber-400">
+              <span className="text-[#c2410c] font-semibold">
                 3. Actual AI Operating Cost (LLM Inference + Tools + Infrastructure)
               </span>
-              <span className="font-mono text-amber-400 font-bold">
+              <span className="font-mono text-[#c2410c] font-bold">
                 Rp {threeView.aiActualOperatingCostMonthly.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="h-6 w-full bg-slate-950/80 rounded-lg overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-6 w-full bg-[#eee9df] rounded-lg overflow-hidden p-0.5 border border-[#b4ae9f]">
               <div
-                className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-md transition-all duration-500"
+                className="h-full bg-[#c2410c] rounded-md transition-all duration-500"
                 style={{ width: `${getWidthPercent(threeView.aiActualOperatingCostMonthly)}%` }}
               />
             </div>
@@ -99,35 +99,35 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
           {/* 4. Total Combined AI Cost (Virtual Comp + Operating) */}
           <div>
             <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-cyan-400">
+              <span className="text-[#5c554b]">
                 4. Simulated Virtual Agent Compensation (Internal Simulation)
               </span>
-              <span className="font-mono text-cyan-400 font-bold">
+              <span className="font-mono text-[#2a2622] font-bold">
                 Rp {threeView.aiVirtualCompensationMonthly.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="h-6 w-full bg-slate-950/80 rounded-lg overflow-hidden p-0.5 border border-slate-800">
+            <div className="h-6 w-full bg-[#eee9df] rounded-lg overflow-hidden p-0.5 border border-[#b4ae9f]">
               <div
-                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-md transition-all duration-500"
+                className="h-full bg-[#b4ae9f] rounded-md transition-all duration-500"
                 style={{ width: `${getWidthPercent(threeView.aiVirtualCompensationMonthly)}%` }}
               />
             </div>
           </div>
         </div>
 
-        <div className="mt-6 p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400 flex items-start space-x-2">
-          <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+        <div className="mt-6 p-3 rounded-xl bg-[#f8f5ee] border border-[#b4ae9f] text-[11px] text-[#5c554b] flex items-start space-x-2">
+          <Info className="w-4 h-4 text-[#385747] shrink-0 mt-0.5" />
           <span>
-            <strong>Analytical Partitioning:</strong> Perspective 2 reflects market salary replacement for equivalent human roles. Perspective 3 reflects monthly hard cloud/LLM costs. Perspective 4 is an internal simulation benchmark for agent capability. They are partitioned to prevent accidental conflation.
+            <strong className="text-[#2a2622]">Analytical Partitioning:</strong> Perspective 2 reflects market salary replacement for equivalent human roles. Perspective 3 reflects monthly hard cloud/LLM costs. Perspective 4 is an internal simulation benchmark for agent capability. They are partitioned to prevent accidental conflation.
           </span>
         </div>
       </div>
 
       {/* Role Composition Matrix Distribution */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
+      <div className="glass-panel p-6 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] shadow-xs">
         <div className="flex items-center space-x-2.5 mb-4">
-          <PieChart className="w-5 h-5 text-cyan-400" />
-          <h4 className="text-sm font-heading font-bold text-slate-100">
+          <PieChart className="w-5 h-5 text-[#385747]" />
+          <h4 className="text-sm font-heading font-bold text-[#2a2622]">
             Workload Role Composition & Capacity Multiplier
           </h4>
         </div>
@@ -139,24 +139,24 @@ export function WorkforceComparisonChart({ threeView, profile }: WorkforceCompar
             );
 
             return (
-              <div key={role.marketRoleId} className="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div key={role.marketRoleId} className="p-3 rounded-xl bg-[#f8f5ee] border border-[#b4ae9f]">
                 <div className="flex justify-between items-baseline mb-1">
-                  <strong className="text-xs font-semibold text-slate-100">
+                  <strong className="text-xs font-semibold text-[#2a2622]">
                     {role.marketRoleTitle}
                   </strong>
-                  <span className="text-xs font-mono font-bold text-emerald-400">
+                  <span className="text-xs font-mono font-bold text-[#385747]">
                     {rolePercent}% ({role.equivalentFte} FTE)
                   </span>
                 </div>
 
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
+                <div className="w-full bg-[#eee9df] h-2 rounded-full overflow-hidden mb-2 border border-[#b4ae9f]/40">
                   <div
-                    className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                    className="bg-[#385747] h-full rounded-full transition-all duration-500"
                     style={{ width: `${rolePercent}%` }}
                   />
                 </div>
 
-                <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                <div className="flex justify-between text-[10px] text-[#5c554b] font-mono">
                   <span>Valuation: Rp {role.illustrativeValueMedian.toLocaleString('id-ID')}</span>
                   <span>Benchmark: Rp {role.benchmark.salaryMedian.toLocaleString('id-ID')}</span>
                 </div>

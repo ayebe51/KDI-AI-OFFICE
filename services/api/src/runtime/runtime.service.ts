@@ -158,4 +158,21 @@ export class RuntimeService implements OnModuleInit, OnModuleDestroy {
   public getAIManager(): AIManager {
     return this.aiManager;
   }
+
+  public getActiveWorkers(): any[] {
+    return (this.runtime as any).workers || [];
+  }
+
+  public getQueueDepth(): number {
+    return this.runtime.queue?.size() ?? 0;
+  }
+
+  public getActiveTasks(): CanonicalTask[] {
+    return this.runtime.getAllTasks().filter((t) => t.status === 'RUNNING');
+  }
+
+  public pauseAllSchedulers(): void {
+    if (this.pollInterval) clearInterval(this.pollInterval);
+    if (this.staleRecoveryInterval) clearInterval(this.staleRecoveryInterval);
+  }
 }

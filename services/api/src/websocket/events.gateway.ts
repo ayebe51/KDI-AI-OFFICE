@@ -62,4 +62,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const envelope = createWSEventEnvelope(eventType, channel, data);
     this.broadcastEvent(envelope);
   }
+
+  getConnectedClientCount(): number {
+    return this.clients.size;
+  }
 }

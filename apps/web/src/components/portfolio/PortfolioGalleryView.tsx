@@ -253,24 +253,24 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in pb-12">
+    <div className="space-y-8 animate-in fade-in pb-12 text-[#2a2622]">
       {/* Header & 3D Switch Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/40 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-widest flex items-center space-x-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#eee9df] text-[#2a2622] border border-[#b4ae9f] uppercase tracking-widest flex items-center space-x-1 font-mono">
+              <Sparkles className="w-3 h-3 text-[#385747]" />
               <span>KDI AI Engineering Portfolio</span>
             </span>
-            <span className="text-xs text-slate-500">•</span>
-            <span className="text-xs text-slate-400">Public Showcase System</span>
+            <span className="text-xs text-[#b4ae9f]">•</span>
+            <span className="text-xs text-[#5c554b] font-mono">Public Showcase System</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-100 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#2a2622] tracking-tight">
             Software Engineered by Autonomous AI
           </h2>
 
-          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5c554b] max-w-2xl leading-relaxed">
             Explore verified applications, multi-tenant SaaS ecosystems, and academic systems built with
             human governance and KDI autonomous multi-agent intelligence.
           </p>
@@ -279,7 +279,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
         {onNavigateTo3D && (
           <button
             onClick={onNavigateTo3D}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-heading font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center space-x-2 shrink-0"
+            className="px-5 py-3 rounded-xl bg-[#2a2622] hover:bg-[#385747] text-[#fffcf5] font-heading font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 shrink-0"
           >
             <Box className="w-4 h-4" />
             <span>Explore in 3D Living Office</span>
@@ -289,20 +289,20 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
 
       {/* Featured Project Showcase Hero Banner */}
       {featuredHero && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-amber-500/30 relative overflow-hidden shadow-2xl flex flex-col md:flex-row gap-6 items-center">
+        <div className="p-6 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] relative overflow-hidden shadow-xs flex flex-col md:flex-row gap-6 items-center">
           <div className="flex-1 space-y-3">
             <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 uppercase tracking-wider font-heading">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#2a2622] text-[#fffcf5] uppercase tracking-wider font-heading">
                 Featured Engineering Project
               </span>
-              <span className="text-xs text-slate-400 font-mono">{featuredHero.year}</span>
+              <span className="text-xs text-[#5c554b] font-mono">{featuredHero.year}</span>
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-heading font-bold text-slate-100">
+            <h3 className="text-xl sm:text-2xl font-heading font-bold text-[#2a2622]">
               {featuredHero.name}
             </h3>
 
-            <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
+            <p className="text-xs text-[#5c554b] leading-relaxed max-w-xl">
               {featuredHero.shortDescription}
             </p>
 
@@ -310,7 +310,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
               {featuredHero.technologies.slice(0, 5).map((tech, idx) => (
                 <span
                   key={idx}
-                  className="text-[11px] px-2.5 py-0.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 font-medium"
+                  className="text-[11px] px-2.5 py-0.5 rounded-lg bg-[#eee9df] border border-[#b4ae9f] text-[#2a2622] font-mono"
                 >
                   {tech}
                 </span>
@@ -320,7 +320,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
             <div className="flex items-center space-x-3 pt-2">
               <button
                 onClick={() => handleOpenProject(featuredHero)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition flex items-center space-x-1.5"
+                className="px-4 py-2 rounded-xl bg-[#2a2622] hover:bg-[#385747] text-[#fffcf5] text-xs font-bold transition flex items-center space-x-1.5 shadow-xs"
               >
                 <span>View Full Showcase</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -331,7 +331,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
                   href={featuredHero.demoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition flex items-center space-x-1.5 border border-slate-700"
+                  className="px-4 py-2 rounded-xl bg-[#eee9df] hover:bg-[#e3dccd] text-[#2a2622] text-xs font-medium transition flex items-center space-x-1.5 border border-[#b4ae9f]"
                 >
                   <span>Launch Demo</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -341,7 +341,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
           </div>
 
           {featuredHero.screenshots?.[0] && (
-            <div className="w-full md:w-80 aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shrink-0 shadow-lg">
+            <div className="w-full md:w-80 aspect-video rounded-xl overflow-hidden border border-[#b4ae9f] bg-[#eee9df] shrink-0 shadow-xs">
               <img
                 src={featuredHero.screenshots[0]}
                 alt={featuredHero.name}
@@ -364,8 +364,8 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition ${
                   selectedCategory === cat
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#2a2622] text-[#fffcf5] font-bold shadow-xs'
+                    : 'bg-[#fffcf5] border border-[#b4ae9f] text-[#5c554b] hover:text-[#2a2622] hover:bg-[#eee9df]'
                 }`}
               >
                 {cat}
@@ -375,20 +375,20 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
 
           {/* Search Box */}
           <div className="relative min-w-[240px]">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#5c554b] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search projects or stack..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] text-xs text-[#2a2622] placeholder-[#5c554b] focus:outline-none focus:border-[#2a2622]"
             />
           </div>
         </div>
 
         {/* Tech Stack Chips Filter */}
-        <div className="flex items-center space-x-2 text-xs text-slate-400 overflow-x-auto pb-1">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 flex items-center space-x-1">
+        <div className="flex items-center space-x-2 text-xs text-[#5c554b] overflow-x-auto pb-1">
+          <span className="text-[11px] font-semibold text-[#5c554b] uppercase tracking-wider shrink-0 flex items-center space-x-1 font-mono">
             <SlidersHorizontal className="w-3 h-3" />
             <span>Tech Filter:</span>
           </span>
@@ -399,8 +399,8 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
               onClick={() => setSelectedTech(tech)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition ${
                 selectedTech === tech
-                  ? 'bg-slate-700 text-amber-300 border border-amber-500/40'
-                  : 'bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#2a2622] text-[#fffcf5] border border-[#2a2622]'
+                  : 'bg-[#fffcf5] border border-[#b4ae9f] text-[#5c554b] hover:text-[#2a2622] hover:bg-[#eee9df]'
               }`}
             >
               {tech}
@@ -414,43 +414,44 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
         {filteredProjects.map((project) => (
           <div
             key={project.projectId}
-            className="group rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/40 transition hover:shadow-xl hover:shadow-amber-500/5 flex flex-col justify-between overflow-hidden cursor-pointer"
+            className="group rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] hover:border-[#2a2622] transition hover:shadow-md flex flex-col justify-between overflow-hidden cursor-pointer"
             onClick={() => handleOpenProject(project)}
           >
             {/* Card Thumbnail / Header */}
             <div>
               {project.screenshots?.[0] ? (
-                <div className="aspect-video w-full overflow-hidden bg-slate-950 relative">
+                <div className="aspect-video w-full overflow-hidden bg-[#eee9df] relative border-b border-[#b4ae9f]">
                   <img
                     src={project.screenshots[0]}
                     alt={project.name}
                     loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                   />
-                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-sm border border-slate-800 text-[10px] font-semibold text-slate-300">
+                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#fffcf5]/90 backdrop-blur-xs border border-[#b4ae9f] text-[10px] font-semibold text-[#2a2622] font-mono">
                     {project.category}
                   </div>
                 </div>
               ) : (
-                <div className="aspect-video w-full bg-slate-950 flex items-center justify-center border-b border-slate-800">
-                  <Layers className="w-8 h-8 text-slate-700" />
+                <div className="aspect-video w-full bg-[#eee9df] flex items-center justify-center border-b border-[#b4ae9f]">
+                  <Layers className="w-8 h-8 text-[#b4ae9f]" />
                 </div>
               )}
 
               {/* Card Body */}
               <div className="p-5 space-y-2.5">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-mono text-emerald-400 font-semibold">
-                    {project.status}
+                  <span className="font-mono text-[#385747] font-semibold flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#385747]" />
+                    <span>{project.status}</span>
                   </span>
-                  <span className="text-slate-500">{project.year}</span>
+                  <span className="text-[#5c554b] font-mono">{project.year}</span>
                 </div>
 
-                <h4 className="text-base font-heading font-bold text-slate-100 group-hover:text-amber-400 transition leading-snug">
+                <h4 className="text-base font-heading font-bold text-[#2a2622] group-hover:text-[#385747] transition leading-snug">
                   {project.name}
                 </h4>
 
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                <p className="text-xs text-[#5c554b] leading-relaxed line-clamp-2">
                   {project.shortDescription}
                 </p>
 
@@ -459,13 +460,13 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
                   {project.technologies.slice(0, 4).map((tech, idx) => (
                     <span
                       key={idx}
-                      className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700/60 text-slate-300"
+                      className="text-[10px] px-2 py-0.5 rounded bg-[#eee9df] border border-[#b4ae9f] text-[#2a2622] font-mono"
                     >
                       {tech}
                     </span>
                   ))}
                   {project.technologies.length > 4 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/40 text-slate-500">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#eee9df] text-[#5c554b] font-mono">
                       +{project.technologies.length - 4}
                     </span>
                   )}
@@ -474,11 +475,11 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
             </div>
 
             {/* Card Footer */}
-            <div className="px-5 py-3 border-t border-slate-800/80 bg-slate-900 flex items-center justify-between text-xs">
-              <span className="text-slate-500 text-[11px] font-mono">
+            <div className="px-5 py-3 border-t border-[#b4ae9f] bg-[#f8f5ee] flex items-center justify-between text-xs">
+              <span className="text-[#5c554b] text-[11px] font-mono">
                 {project.clientType}
               </span>
-              <span className="text-amber-400 font-semibold flex items-center space-x-1 group-hover:translate-x-1 transition text-xs">
+              <span className="text-[#2a2622] font-semibold flex items-center space-x-1 group-hover:translate-x-1 transition text-xs">
                 <span>Showcase</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </span>
@@ -488,8 +489,8 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
       </div>
 
       {filteredProjects.length === 0 && (
-        <div className="p-12 text-center rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-          <p className="text-sm text-slate-400">
+        <div className="p-12 text-center rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] space-y-3">
+          <p className="text-sm text-[#5c554b]">
             No projects found matching the specified filters.
           </p>
           <button
@@ -498,7 +499,7 @@ export const PortfolioGalleryView: React.FC<PortfolioGalleryViewProps> = ({
               setSelectedTech('ALL');
               setSearchQuery('');
             }}
-            className="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold hover:bg-slate-700 transition"
+            className="px-4 py-2 rounded-xl bg-[#2a2622] text-[#fffcf5] text-xs font-semibold hover:bg-[#385747] transition shadow-xs"
           >
             Reset Filters
           </button>

@@ -1,6 +1,6 @@
 // ==========================================================
 // 3d/scene/OfficeLighting.tsx
-// Lighting Configuration: Warm Professional Tone
+// Bright Warm Daylight Office Lighting
 // ==========================================================
 
 import React from 'react';
@@ -10,41 +10,50 @@ import { Light } from '@playcanvas/react/components';
 export const OfficeLighting: React.FC = () => {
   return (
     <Entity name="OfficeLightingRoot">
-      {/* Primary Key Light - Warm Directional Sunlight */}
-      <Entity
-        name="KeyLightDirectional"
-        position={[5, 8, 5]}
-        rotation={[45, 30, 0]}
-      >
+      {/* Primary Sun / Skylight — bright warm white */}
+      <Entity name="SunLight" position={[8, 14, 8]} rotation={[50, -30, 0]}>
         <Light
           type="directional"
-          color="#fef3c7"
-          intensity={1.2}
+          color="#fffdf5"
+          intensity={2.2}
           castShadows={true}
-          shadowDistance={25}
+          shadowDistance={40}
           shadowResolution={1024}
-          shadowBias={0.05}
+          shadowBias={0.04}
         />
       </Entity>
 
-      {/* Ceiling Ambient Fill Light */}
-      <Entity name="CeilingFillLight" position={[0, 4.5, 0]}>
+      {/* Strong ambient sky fill — makes everything bright */}
+      <Entity name="SkyAmbient" position={[0, 10, 0]}>
         <Light
           type="omni"
-          color="#e2e8f0"
-          intensity={0.45}
-          range={18}
+          color="#ddeeff"
+          intensity={1.8}
+          range={80}
           castShadows={false}
         />
       </Entity>
 
-      {/* Cool Tech Accent Backlight */}
-      <Entity name="TechAccentLight" position={[-4, 3, -3]}>
+      {/* Ceiling office panel lights — warm white */}
+      <Entity name="OfficePanel1" position={[0, 4.5, 8]}>
+        <Light type="omni" color="#fff8e7" intensity={1.2} range={20} castShadows={false} />
+      </Entity>
+      <Entity name="OfficePanel2" position={[0, 4.5, -4]}>
+        <Light type="omni" color="#fff8e7" intensity={1.2} range={20} castShadows={false} />
+      </Entity>
+      <Entity name="OfficePanel3" position={[-12, 4.5, 0]}>
+        <Light type="omni" color="#fff8e7" intensity={1.0} range={18} castShadows={false} />
+      </Entity>
+      <Entity name="OfficePanel4" position={[12, 4.5, 0]}>
+        <Light type="omni" color="#fff8e7" intensity={1.0} range={18} castShadows={false} />
+      </Entity>
+
+      {/* Soft fill from opposite side to reduce harsh shadows */}
+      <Entity name="FillLight" position={[-6, 6, -6]} rotation={[30, 150, 0]}>
         <Light
-          type="omni"
-          color="#38bdf8"
-          intensity={0.35}
-          range={12}
+          type="directional"
+          color="#cce8ff"
+          intensity={0.7}
           castShadows={false}
         />
       </Entity>

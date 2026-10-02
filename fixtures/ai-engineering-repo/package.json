@@ -1,0 +1,10 @@
+{
+  "name": "ai-engineering-repo",
+  "version": "1.0.0",
+  "description": "Realistic fixture repository for AI Engineering Workforce execution",
+  "main": "src/auth.service.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/auth.test.js"
+  }
+}

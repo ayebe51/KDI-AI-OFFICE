@@ -3,7 +3,7 @@
 // NestJS Core Engineering Service: MetaGPT + Antigravity Orchestrator
 // ==========================================================
 
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Optional } from '@nestjs/common';
 import type {
   EngineeringPlan,
   EngineeringSession,
@@ -21,6 +21,8 @@ import { EngineeringRepository } from './persistence/engineering.repository.js';
 import { Neo4jEngineeringService } from './persistence/neo4j-engineering.service.js';
 import { ApprovalGateService } from './security/approval-gate.service.js';
 import { WorkspaceManager } from './workspace/workspace-manager.js';
+import { EngineeringExecutorService } from './execution/engineering-executor.service.js';
+import { EngineeringAgentService } from './execution/engineering-agent.service.js';
 import { PostgresService } from '../database/postgres.service.js';
 import { RedisService } from '../database/redis.service.js';
 import { Neo4jService } from '../database/neo4j.service.js';
@@ -38,15 +40,21 @@ export class EngineeringService implements OnModuleInit {
   public readonly neo4jGraph: Neo4jEngineeringService;
   public readonly approvalGate: ApprovalGateService;
   public readonly workspaceManager: WorkspaceManager;
+  public readonly executorService: EngineeringExecutorService;
+  public readonly agentReviewer: EngineeringAgentService;
 
   constructor(
     private readonly postgresService: PostgresService,
     private readonly redisService: RedisService,
     private readonly neo4jService: Neo4jService,
-    private readonly eventsGateway: EventsGateway
+    private readonly eventsGateway: EventsGateway,
+    @Optional() executorService?: EngineeringExecutorService,
+    @Optional() agentReviewer?: EngineeringAgentService
   ) {
     this.approvalGate = new ApprovalGateService();
     this.workspaceManager = new WorkspaceManager();
+    this.agentReviewer = agentReviewer || new EngineeringAgentService();
+    this.executorService = executorService || new EngineeringExecutorService(this.approvalGate, this.agentReviewer);
     this.eventEmitter = new EngineeringEventEmitter(this.eventsGateway, this.redisService);
     this.repository = new EngineeringRepository(this.postgresService);
     this.neo4jGraph = new Neo4jEngineeringService(this.neo4jService);

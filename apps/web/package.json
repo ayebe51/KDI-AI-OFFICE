@@ -9,20 +9,26 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/3d/adapters/Agent3DStateAdapter.test.ts src/3d/navigation/NavGraph.test.ts src/3d/animation/AgentAnimationController.test.ts src/3d/state/OfficeWorldStore.test.ts src/3d/phase6-integration.test.ts src/components/portfolio/phase7-integration.test.ts src/components/workforce/phase8-integration.test.ts src/components/command-center/phase9-integration.test.ts"
+    "test": "node --test src/3d/adapters/Agent3DStateAdapter.test.ts src/3d/navigation/NavGraph.test.ts src/3d/animation/AgentAnimationController.test.ts src/3d/state/OfficeWorldStore.test.ts src/3d/phase6-integration.test.ts src/components/portfolio/phase7-integration.test.ts src/components/workforce/phase8-integration.test.ts src/components/command-center/phase9-integration.test.ts src/components/command-center/phase10-integration.test.ts src/office/security/SecretSanitizer.test.ts src/office/adapters/adapters.test.ts"
   },
   "dependencies": {
     "@kdi/types": "^1.0.0",
     "@playcanvas/react": "^0.11.7",
     "@react-three/drei": "^9.121.4",
     "@react-three/fiber": "^8.17.14",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-unicode11": "^0.9.0",
+    "@xterm/addon-webgl": "^0.19.0",
+    "@xterm/xterm": "^5.5.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.469.0",
+    "pixi.js": "^8.21.0",
     "playcanvas": "^2.22.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0",
-    "three": "^0.172.0"
+    "three": "^0.172.0",
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",

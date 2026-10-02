@@ -16,6 +16,10 @@ export class PromptInjectionDefense {
 
   private static readonly SUSPICIOUS_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
     { name: 'IGNORE_PREVIOUS_INSTRUCTIONS', pattern: /ignore\s+(all\s+)?previous\s+instructions/i },
+    { name: 'IGNORE_KDI_POLICIES', pattern: /ignore\s+(all\s+)?(kdi\s+)?policies/i },
+    { name: 'BYPASS_APPROVAL_GATE', pattern: /(bypass|skip|ignore)\s+(all\s+)?(approvals?|gates?)/i },
+    { name: 'INDO_POLICY_OVERRIDE', pattern: /(abaikan|lewati)\s+(semua\s+)?(kebijakan|policy|aturan|persetujuan)/i },
+    { name: 'FORCE_DEPLOY_OVERRIDE', pattern: /deploy\s+immediately/i },
     { name: 'SYSTEM_PROMPT_OVERRIDE', pattern: /you\s+are\s+no\s+longer\s+an?\s+ai/i },
     { name: 'DISCLOSE_ENV_SECRETS', pattern: /(send|upload|print|echo|dump)\s+(all\s+)?(env|environment|secrets|credentials|tokens|api_keys)/i },
     { name: 'DISABLE_SECURITY_CONTROLS', pattern: /(disable|bypass|turn\s*off)\s+(all\s+)?(security|policies|checks|permission)/i },

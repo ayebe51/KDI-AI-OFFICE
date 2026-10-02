@@ -9,25 +9,25 @@ import { Render } from '@playcanvas/react/components';
 import { useMaterial } from '@playcanvas/react/hooks';
 
 export const Corridors: React.FC = () => {
-  // Main corridor polished dark concrete material
+  // Main corridor — light warm gray (polished concrete)
   const corridorMat = useMaterial({
-    diffuse: '#090d16',
-    metalness: 0.1,
-    gloss: 0.6,
+    diffuse: '#e8e4de',
+    metalness: 0.05,
+    gloss: 0.55,
   });
 
-  // Wayfinding floor guide stripe
+  // Wayfinding floor guide stripe — warm amber
   const stripeMat = useMaterial({
-    diffuse: '#0284c7',
-    emissive: '#0284c7',
-    emissiveIntensity: 0.35,
-    gloss: 0.8,
+    diffuse: '#f59e0b',
+    emissive: '#d97706',
+    emissiveIntensity: 0.25,
+    gloss: 0.7,
   });
 
-  // Outer building floor foundation plate (48m x 56m)
+  // Outer building floor foundation plate — light off-white
   const foundationMat = useMaterial({
-    diffuse: '#020617',
-    gloss: 0.2,
+    diffuse: '#f5f1eb',
+    gloss: 0.3,
   });
 
   return (

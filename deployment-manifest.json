@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "kdi-ai-office",
+  "environment": "production",
+  "targetHost": "canonical-office-computer",
+  "generatedAt": "2026-09-30T10:48:30Z",
+  "release": {
+    "version": "1.0.0-phase10",
+    "buildId": "kdi-build-20260930-phase10-hardened",
+    "gitCommit": "HEAD",
+    "branch": "main",
+    "configurationHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "components": [
+    {
+      "name": "kdi-api",
+      "type": "backend-core",
+      "version": "1.0.0",
+      "source": "services/api",
+      "runtime": "Node.js v20.x",
+      "port": 3000,
+      "binding": "127.0.0.1"
+    },
+    {
+      "name": "kdi-web",
+      "type": "frontend-command-center",
+      "version": "1.0.0",
+      "source": "apps/web",
+      "runtime": "Vite / React 18 / PlayCanvas",
+      "port": 5173,
+      "binding": "127.0.0.1"
+    },
+    {
+      "name": "postgresql",
+      "type": "database-primary",
+      "version": "16.x",
+      "source": "native-windows-service",
+      "port": 5432,
+      "binding": "127.0.0.1"
+    },
+    {
+      "name": "redis",
+      "type": "event-queue-cache",
+      "version": "7.x",
+      "source": "docker-container",
+      "port": 6379,
+      "binding": "127.0.0.1"
+    },
+    {
+      "name": "neo4j",
+      "type": "knowledge-graph",
+      "version": "5.x",
+      "source": "docker-container",
+      "port": 7687,
+      "binding": "127.0.0.1"
+    },
+    {
+      "name": "ollama",
+      "type": "local-llm-runtime",
+      "version": "0.3.x",
+      "source": "native-windows-service",
+      "port": 11434,
+      "binding": "127.0.0.1"
+    }
+  ],
+  "securityBoundaries": {
+    "publicPortsExposed": [],
+    "internalNetworkOnly": [5432, 6379, 7687, 7474, 11434],
+    "gatewayReverseProxyTarget": "http://127.0.0.1:3000",
+    "tlsTermination": "Hostinger Gateway / Cloudflare Edge"
+  }
+}

@@ -11,10 +11,25 @@ export interface StructuredLogEntry {
   level: LogLevel;
   service: string;
   requestId?: string;
+  traceId?: string;
+  spanId?: string;
+  taskId?: string;
+  executionId?: string;
+  agentId?: string;
+  projectId?: string;
+  incidentId?: string;
   operation: string;
   errorCode?: string;
   message: string;
   metadata?: Record<string, unknown>;
+}
+
+export function generateTraceId(): string {
+  return 'trc_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+}
+
+export function generateSpanId(): string {
+  return 'spn_' + Math.random().toString(36).substring(2, 10);
 }
 
 // Regex patterns for scrubbed keys and tokens
@@ -47,8 +62,10 @@ const SENSITIVE_CONTENT_PATTERNS: Array<{ pattern: RegExp; replacement: string }
   { pattern: /(redis:\/\/[^:]+:)([^@]+)(@[^\s"']+)/gi, replacement: '$1[REDACTED_PASSWORD]$3' },
   // Bearer tokens
   { pattern: /(Bearer\s+)[A-Za-z0-9\-._~+/]+=*/gi, replacement: '$1[REDACTED_BEARER_TOKEN]' },
-  // Key-value patterns like password=xyz or secret: "xyz"
-  { pattern: /((?:password|secret|api_?key|token)\s*[:=]\s*["']?)([^"'\s\n\r]+)(["']?)/gi, replacement: '$1[REDACTED]$3' },
+  // Telegram Bot Tokens
+  { pattern: /\b\d{7,12}:[A-Za-z0-9_-]{30,45}\b/g, replacement: '[REDACTED_TELEGRAM_TOKEN]' },
+  // Key-value patterns like password=xyz or secret: "xyz" (ignoring already redacted placeholders)
+  { pattern: /((?:password|secret|api_?key|token)\s*[:=]\s*["']?)(?!(?:\[REDACTED[^\]]*\]))([^"'\s\n\r]+)(["']?)/gi, replacement: '$1[REDACTED]$3' },
 ];
 
 export function redactSecretsFromString(text: string): string {
@@ -89,17 +106,48 @@ export function scrubSensitiveData(obj: unknown): unknown {
   return result;
 }
 
+export interface LogContextOptions {
+  requestId?: string;
+  traceId?: string;
+  spanId?: string;
+  taskId?: string;
+  executionId?: string;
+  agentId?: string;
+  projectId?: string;
+  incidentId?: string;
+  errorCode?: string;
+}
+
 export class StructuredLogger {
   constructor(private readonly serviceName: string) {}
 
-  private write(level: LogLevel, operation: string, message: string, meta?: Record<string, unknown>, requestId?: string, errorCode?: string) {
+  private write(
+    level: LogLevel,
+    operation: string,
+    message: string,
+    meta?: Record<string, unknown>,
+    ctxOrReqId?: string | LogContextOptions,
+    errorCode?: string
+  ) {
+    const opts: LogContextOptions =
+      typeof ctxOrReqId === 'string'
+        ? { requestId: ctxOrReqId, errorCode }
+        : ctxOrReqId || {};
+
     const entry: StructuredLogEntry = {
       timestamp: new Date().toISOString(),
       level,
       service: this.serviceName,
-      requestId,
+      requestId: opts.requestId,
+      traceId: opts.traceId,
+      spanId: opts.spanId,
+      taskId: opts.taskId,
+      executionId: opts.executionId,
+      agentId: opts.agentId,
+      projectId: opts.projectId,
+      incidentId: opts.incidentId,
       operation,
-      errorCode,
+      errorCode: opts.errorCode || errorCode,
       message,
       metadata: meta ? (scrubSensitiveData(meta) as Record<string, unknown>) : undefined,
     };
@@ -114,20 +162,20 @@ export class StructuredLogger {
     }
   }
 
-  info(operation: string, message: string, meta?: Record<string, unknown>, requestId?: string) {
-    this.write('INFO', operation, message, meta, requestId);
+  info(operation: string, message: string, meta?: Record<string, unknown>, ctxOrReqId?: string | LogContextOptions) {
+    this.write('INFO', operation, message, meta, ctxOrReqId);
   }
 
-  warn(operation: string, message: string, meta?: Record<string, unknown>, requestId?: string, errorCode?: string) {
-    this.write('WARN', operation, message, meta, requestId, errorCode);
+  warn(operation: string, message: string, meta?: Record<string, unknown>, ctxOrReqId?: string | LogContextOptions, errorCode?: string) {
+    this.write('WARN', operation, message, meta, ctxOrReqId, errorCode);
   }
 
-  error(operation: string, message: string, meta?: Record<string, unknown>, requestId?: string, errorCode?: string) {
-    this.write('ERROR', operation, message, meta, requestId, errorCode);
+  error(operation: string, message: string, meta?: Record<string, unknown>, ctxOrReqId?: string | LogContextOptions, errorCode?: string) {
+    this.write('ERROR', operation, message, meta, ctxOrReqId, errorCode);
   }
 
-  debug(operation: string, message: string, meta?: Record<string, unknown>, requestId?: string) {
-    this.write('DEBUG', operation, message, meta, requestId);
+  debug(operation: string, message: string, meta?: Record<string, unknown>, ctxOrReqId?: string | LogContextOptions) {
+    this.write('DEBUG', operation, message, meta, ctxOrReqId);
   }
 }
 

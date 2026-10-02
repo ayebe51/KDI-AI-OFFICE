@@ -10,12 +10,14 @@ import { Shield, Cpu, Activity, Clock, DollarSign, Award, X } from 'lucide-react
 export interface AgentInspectorModalProps {
   agent: OfficeAgentDetail;
   isInternalMode: boolean;
+  onFollowAgent?: (agent: OfficeAgentDetail) => void;
   onClose: () => void;
 }
 
 export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
   agent,
   isInternalMode,
+  onFollowAgent,
   onClose,
 }) => {
   return (
@@ -115,7 +117,15 @@ export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="pt-2 flex justify-end">
+        <div className="pt-2 flex justify-between items-center">
+          {onFollowAgent ? (
+            <button
+              onClick={() => onFollowAgent(agent)}
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm"
+            >
+              <span>🎯 Follow Agent (Camera)</span>
+            </button>
+          ) : <div />}
           <button
             onClick={onClose}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"

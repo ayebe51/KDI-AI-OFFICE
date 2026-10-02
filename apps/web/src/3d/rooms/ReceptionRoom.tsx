@@ -17,39 +17,39 @@ export const ReceptionRoom: React.FC<ReceptionRoomProps> = ({
   position = [0, 0, 16],
   onSelectRoom,
 }) => {
-  // Polished terrazzo marble lobby floor
+  // Polished marble lobby floor — light cream
   const floorMat = useMaterial({
-    diffuse: '#1e293b',
-    metalness: 0.2,
-    gloss: 0.8,
+    diffuse: '#f0ebe3',
+    metalness: 0.05,
+    gloss: 0.75,
   });
 
-  // Reception desk quartz counter
+  // Reception desk — warm walnut wood tone
   const counterMat = useMaterial({
-    diffuse: '#0284c7',
-    gloss: 0.85,
+    diffuse: '#8b6343',
+    gloss: 0.65,
   });
 
-  // Corporate gold emblem accent
+  // Corporate KDI gold emblem accent
   const emblemMat = useMaterial({
     diffuse: '#f59e0b',
     emissive: '#d97706',
-    emissiveIntensity: 0.8,
+    emissiveIntensity: 0.5,
     metalness: 0.8,
     gloss: 0.9,
   });
 
-  // Guest lounge seating
+  // Guest lounge seating — warm sand
   const loungeSeatMat = useMaterial({
-    diffuse: '#334155',
-    gloss: 0.4,
+    diffuse: '#d4a97a',
+    gloss: 0.3,
   });
 
-  // Digital Directory Kiosk Screen
+  // Digital Directory Kiosk Screen — bright teal
   const kioskScreenMat = useMaterial({
-    diffuse: '#38bdf8',
-    emissive: '#0284c7',
-    emissiveIntensity: 0.6,
+    diffuse: '#06b6d4',
+    emissive: '#0891b2',
+    emissiveIntensity: 0.4,
   });
 
   return (

@@ -28,25 +28,25 @@ export const AiContributionBadge: React.FC<AiContributionBadgeProps> = ({
       {/* Human vs AI Breakdown Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Human Leadership & Governance */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+        <div className="p-4 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] space-y-3">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-[#385747] uppercase tracking-wider">
             <UserCheck className="w-4 h-4" />
             <span>Human Strategic Leadership</span>
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-[#5c554b] leading-relaxed">
             {aiContribution.humanContribution}
           </p>
 
           {humanMembers.length > 0 && (
-            <div className="pt-2 border-t border-slate-800 space-y-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">
+            <div className="pt-2 border-t border-[#b4ae9f] space-y-1.5">
+              <span className="text-[10px] text-[#5c554b] uppercase tracking-wider block font-semibold">
                 Human Directors & Advisors:
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {humanMembers.map((m, idx) => (
                   <span
                     key={idx}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium"
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-medium"
                   >
                     {m.name} ({m.role})
                   </span>
@@ -57,27 +57,27 @@ export const AiContributionBadge: React.FC<AiContributionBadgeProps> = ({
         </div>
 
         {/* Autonomous AI Engineering */}
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            <Bot className="w-4 h-4" />
+        <div className="p-4 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] space-y-3">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-[#2a2622] uppercase tracking-wider">
+            <Bot className="w-4 h-4 text-[#385747]" />
             <span>Autonomous AI Engineering Workforce</span>
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-[#5c554b] leading-relaxed">
             {aiContribution.aiContribution}
           </p>
 
           {aiContribution.engineeringAgents.length > 0 && (
-            <div className="pt-2 border-t border-slate-800 space-y-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">
+            <div className="pt-2 border-t border-[#b4ae9f] space-y-1.5">
+              <span className="text-[10px] text-[#5c554b] uppercase tracking-wider block font-semibold">
                 Active Digital Personas:
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {aiContribution.engineeringAgents.map((agent, idx) => (
                   <span
                     key={idx}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 font-medium flex items-center space-x-1"
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-[#eee9df] border border-[#b4ae9f] text-[#2a2622] font-medium flex items-center space-x-1"
                   >
-                    <Cpu className="w-3 h-3 text-amber-400" />
+                    <Cpu className="w-3 h-3 text-[#385747]" />
                     <span>{agent}</span>
                   </span>
                 ))}
@@ -90,36 +90,36 @@ export const AiContributionBadge: React.FC<AiContributionBadgeProps> = ({
       {/* Specific Engineering Contributions Sub-Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {aiContribution.planningContribution && (
-          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center space-x-1.5 text-xs font-medium text-sky-400">
-              <Layers className="w-3.5 h-3.5" />
+          <div className="p-3.5 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] space-y-1.5 shadow-2xs">
+            <div className="flex items-center space-x-1.5 text-xs font-medium text-[#2a2622]">
+              <Layers className="w-3.5 h-3.5 text-[#385747]" />
               <span>Planning & Architecture</span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-normal">
+            <p className="text-[11px] text-[#5c554b] leading-normal">
               {aiContribution.planningContribution}
             </p>
           </div>
         )}
 
         {aiContribution.testingContribution && (
-          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center space-x-1.5 text-xs font-medium text-purple-400">
+          <div className="p-3.5 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] space-y-1.5 shadow-2xs">
+            <div className="flex items-center space-x-1.5 text-xs font-medium text-[#385747]">
               <CheckSquare className="w-3.5 h-3.5" />
               <span>Automated QA & Security</span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-normal">
+            <p className="text-[11px] text-[#5c554b] leading-normal">
               {aiContribution.testingContribution}
             </p>
           </div>
         )}
 
         {aiContribution.automationContribution && (
-          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
-            <div className="flex items-center space-x-1.5 text-xs font-medium text-amber-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
+          <div className="p-3.5 rounded-xl bg-[#fffcf5] border border-[#b4ae9f] space-y-1.5 shadow-2xs">
+            <div className="flex items-center space-x-1.5 text-xs font-medium text-amber-800">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
               <span>CI/CD & Git Worktree</span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-normal">
+            <p className="text-[11px] text-[#5c554b] leading-normal">
               {aiContribution.automationContribution}
             </p>
           </div>

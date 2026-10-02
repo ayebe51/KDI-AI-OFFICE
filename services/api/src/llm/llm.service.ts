@@ -157,4 +157,13 @@ export class LLMService {
   public getCircuitBreaker(): CircuitBreaker {
     return this.circuitBreaker;
   }
+
+  public getAvailableProviders(): string[] {
+    return Array.from(this.providers.keys());
+  }
+
+  public isLocalProviderAvailable(): boolean {
+    const ollama = this.providers.get('ollama');
+    return ollama ? this.circuitBreaker.getStatus('ollama').state !== 'OPEN' : false;
+  }
 }

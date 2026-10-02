@@ -80,30 +80,30 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
     return (
       <div className="flex-1 flex items-center justify-center p-12">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-slate-400 font-mono">Loading Workforce Valuation Engine...</span>
+          <div className="w-8 h-8 border-4 border-[#2a2622] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-[#5c554b] font-mono">Loading Workforce Valuation Engine...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
+    <div className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full text-[#2a2622]">
       {/* Dashboard Top Header */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel p-6 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] text-[#2a2622] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
         <div>
           <div className="flex items-center space-x-2.5 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#eee9df] text-[#2a2622] border border-[#b4ae9f] uppercase tracking-wider font-mono">
               Phase 8 Core System
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-[#5c554b] font-mono">
               2026 Indonesian Regional & Remote Benchmarks
             </span>
           </div>
-          <h2 className="text-xl font-heading font-bold text-slate-100 leading-tight">
+          <h2 className="text-xl font-heading font-bold text-[#2a2622] leading-tight">
             Workforce Valuation, Salary Benchmark & Workload Mirror
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#5c554b] mt-1">
             Separation of Real-World Market Workforce Valuation from Autonomous AI Virtual Workforce Operating Costs.
           </p>
         </div>
@@ -112,24 +112,24 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowExportModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center space-x-2 transition border border-slate-700"
+            className="px-3.5 py-2 rounded-xl bg-[#2a2622] hover:bg-[#385747] text-[#fffcf5] text-xs font-semibold flex items-center space-x-2 transition shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <Download className="w-3.5 h-3.5 text-[#fffcf5]" />
             <span>Export Report</span>
           </button>
         </div>
       </div>
 
       {/* Mandatory Governance Disclaimer Banner */}
-      <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-start space-x-3">
-        <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-2xl bg-[#385747]/10 border border-[#385747]/30 text-xs text-[#2a2622] flex items-start space-x-3">
+        <Info className="w-5 h-5 text-[#385747] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <strong className="block font-semibold uppercase tracking-wider text-blue-200">
+          <strong className="block font-semibold uppercase tracking-wider text-[#385747] font-mono">
             Methodological Notice & Legal Governance Disclaimer
           </strong>
-          <p className="text-slate-300 leading-relaxed">
+          <p className="text-[#5c554b] leading-relaxed">
             All salary benchmarks and workforce valuations presented herein represent an{' '}
-            <strong className="text-slate-100">
+            <strong className="text-[#2a2622]">
               illustrative market replacement valuation for equivalent job roles
             </strong>{' '}
             based on verified 2026 published surveys (BPS Jawa Tengah, Glints, Michael Page, and Jobstreet by SEEK). This analysis reflects functional composition and market replacement value; it does NOT constitute an employment contract, guaranteed salary entitlement, or accusation of underpayment.
@@ -138,13 +138,13 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
       </div>
 
       {/* Primary Perspective Selector Tabs */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-[#eee9df] border border-[#b4ae9f]">
         <button
           onClick={() => setActiveView('workload_mirror')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
             activeView === 'workload_mirror'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              ? 'bg-[#2a2622] text-[#fffcf5] shadow-xs'
+              : 'text-[#5c554b] hover:text-[#2a2622] hover:bg-[#e3dccd]'
           }`}
         >
           <Scale className="w-4 h-4" />
@@ -155,8 +155,8 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
           onClick={() => setActiveView('ai_workforce')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
             activeView === 'ai_workforce'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              ? 'bg-[#2a2622] text-[#fffcf5] shadow-xs'
+              : 'text-[#5c554b] hover:text-[#2a2622] hover:bg-[#e3dccd]'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -167,8 +167,8 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
           onClick={() => setActiveView('three_view')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
             activeView === 'three_view'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              ? 'bg-[#2a2622] text-[#fffcf5] shadow-xs'
+              : 'text-[#5c554b] hover:text-[#2a2622] hover:bg-[#e3dccd]'
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -179,8 +179,8 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
           onClick={() => setActiveView('what_if')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
             activeView === 'what_if'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              ? 'bg-[#2a2622] text-[#fffcf5] shadow-xs'
+              : 'text-[#5c554b] hover:text-[#2a2622] hover:bg-[#e3dccd]'
           }`}
         >
           <Sliders className="w-4 h-4" />
@@ -195,79 +195,79 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
         <div className="space-y-6">
           {/* Executive KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Workforce Capacity
               </span>
               <div className="flex items-baseline space-x-2">
-                <span className="text-2xl font-bold font-mono text-slate-100">1 Human</span>
-                <span className="text-xs text-amber-400 font-semibold">→ 6 Roles</span>
+                <span className="text-2xl font-bold font-mono text-[#2a2622]">1 Human</span>
+                <span className="text-xs text-[#385747] font-semibold">→ 6 Roles</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
-                Total Equivalent: <strong className="text-slate-200">{profile.totalEquivalentFte} FTE</strong>
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
+                Total Equivalent: <strong className="text-[#2a2622]">{profile.totalEquivalentFte} FTE</strong>
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Illustrative Monthly Value
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-emerald-400">
+                <span className="text-xl font-bold font-mono text-[#385747]">
                   Rp {profile.illustrativeWorkforceValue.monthlyMedian.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Range: Rp {(profile.illustrativeWorkforceValue.monthlyMin / 1000000).toFixed(1)}M –{' '}
                 {(profile.illustrativeWorkforceValue.monthlyMax / 1000000).toFixed(1)}M
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Actual Compensation
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-slate-200">
+                <span className="text-xl font-bold font-mono text-[#2a2622]">
                   Rp {profile.actualCompensation.totalMonthly.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Base: Rp {(profile.actualCompensation.baseSalary / 1000000).toFixed(1)}M + Allow: Rp{' '}
                 {(profile.actualCompensation.allowances / 1000).toFixed(0)}K
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Illustrative Benchmark Gap
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-cyan-400">
+                <span className="text-xl font-bold font-mono text-[#c2410c]">
                   Rp {profile.illustrativeGap.monthlyMedian.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Annualized Median: Rp {(profile.illustrativeGap.annualizedMedian / 1000000).toFixed(1)}M / year
               </span>
             </div>
           </div>
 
           {/* Functional Responsibilities -> Mapped Roles Matrix */}
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
+          <div className="glass-panel p-6 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-base font-heading font-bold text-slate-100">
+                <h3 className="text-base font-heading font-bold text-[#2a2622]">
                   Workload Mirror: Responsibility to Equivalent Role Mapping
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#5c554b]">
                   Mapping individual operational responsibilities into standardized market roles with double-counting mitigation.
                 </p>
               </div>
-              <span className="text-xs font-mono text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              <span className="text-xs font-mono text-[#385747] bg-[#385747]/10 px-3 py-1 rounded-full border border-[#385747]/20 font-semibold">
                 Double-Counting Mitigated: 0.1 Overlap Factor Applied
               </span>
             </div>
@@ -281,20 +281,20 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
                 return (
                   <div
                     key={resp.responsibilityId}
-                    className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between space-y-4 hover:border-slate-700 transition"
+                    className="p-4 rounded-xl bg-[#f8f5ee] border border-[#b4ae9f] flex flex-col justify-between space-y-4 hover:border-[#2a2622] transition shadow-xs"
                   >
                     <div>
                       {/* Responsibility Title & Badges */}
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <strong className="text-xs font-semibold text-slate-100 leading-snug">
+                        <strong className="text-xs font-semibold text-[#2a2622] leading-snug">
                           {resp.title}
                         </strong>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 shrink-0">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#eee9df] text-[#2a2622] border border-[#b4ae9f] shrink-0">
                           {resp.frequency} • {resp.estimatedHoursPerWeek}h/wk
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                      <p className="text-[11px] text-[#5c554b] mb-3 leading-relaxed">
                         {resp.description}
                       </p>
 
@@ -303,7 +303,7 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
                         {resp.skills.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px] border border-slate-800"
+                            className="px-2 py-0.5 rounded bg-[#fffcf5] text-[#2a2622] text-[10px] border border-[#b4ae9f] font-mono"
                           >
                             {s}
                           </span>
@@ -311,31 +311,31 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
                       </div>
 
                       {/* Mapped Role Section */}
-                      <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80 space-y-2 text-xs">
+                      <div className="p-3 rounded-lg bg-[#fffcf5] border border-[#b4ae9f] space-y-2 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 font-medium">Mapped Role:</span>
-                          <strong className="text-amber-400 font-semibold">
+                          <span className="text-[#5c554b] font-medium">Mapped Role:</span>
+                          <strong className="text-[#2a2622] font-semibold">
                             {mapping?.marketRoleTitle || 'Web Administrator'}
                           </strong>
                         </div>
 
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-slate-400">Match Confidence:</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="text-[#5c554b]">Match Confidence:</span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#385747]/10 text-[#385747] border border-[#385747]/20 font-mono">
                             {mapping?.matchConfidence || 'HIGH'}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-slate-400">Workload Allocation & Overlap:</span>
-                          <span className="font-mono text-slate-200">
+                          <span className="text-[#5c554b]">Workload Allocation & Overlap:</span>
+                          <span className="font-mono text-[#2a2622]">
                             {mapping?.allocationPercentage}% ({roleVal?.equivalentFte} FTE)
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[11px]">
-                          <span className="text-slate-400">Illustrative Valuation:</span>
-                          <span className="font-mono text-emerald-400 font-bold">
+                        <div className="flex items-center justify-between pt-1 border-t border-[#b4ae9f] text-[11px]">
+                          <span className="text-[#5c554b]">Illustrative Valuation:</span>
+                          <span className="font-mono text-[#385747] font-bold">
                             Rp {roleVal?.illustrativeValueMedian.toLocaleString('id-ID')} / mo
                           </span>
                         </div>
@@ -344,13 +344,13 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
 
                     {/* Source Provenance Link */}
                     {source && (
-                      <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400 truncate max-w-[200px]">
-                          Source: <strong className="text-slate-300">{source.provider}</strong>
+                      <div className="pt-2 border-t border-[#b4ae9f] flex items-center justify-between text-[11px]">
+                        <span className="text-[#5c554b] truncate max-w-[200px] font-mono">
+                          Source: <strong className="text-[#2a2622]">{source.provider}</strong>
                         </span>
                         <button
                           onClick={() => setActiveSourceModal(source)}
-                          className="text-amber-400 hover:text-amber-300 flex items-center space-x-1 font-medium transition"
+                          className="text-[#385747] hover:text-[#2a2622] flex items-center space-x-1 font-semibold transition"
                         >
                           <span>{source.reliabilityTier} Details</span>
                           <ExternalLink className="w-3 h-3" />
@@ -372,67 +372,67 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
         <div className="space-y-6">
           {/* AI Workforce Summary KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Virtual AI Staff
               </span>
-              <span className="text-2xl font-bold font-mono text-slate-100">
+              <span className="text-2xl font-bold font-mono text-[#2a2622]">
                 {virtualEmployees.length} Autonomous Agents
               </span>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Engineering, Architecture, QA, Product
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Simulated Virtual Compensation
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-cyan-400">
+                <span className="text-xl font-bold font-mono text-[#2a2622]">
                   Rp {threeView.aiVirtualCompensationMonthly.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Base + Allowances + Performance Incentives
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Actual AI Operating Cost
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-amber-400">
+                <span className="text-xl font-bold font-mono text-[#c2410c]">
                   Rp {threeView.aiActualOperatingCostMonthly.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 LLM Tokens + Tool APIs + Cloud Infrastructure
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+            <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-xs">
+              <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide font-mono">
                 Total Combined AI Cost
               </span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl font-bold font-mono text-slate-200">
+                <span className="text-xl font-bold font-mono text-[#385747]">
                   Rp {threeView.totalAiCostMonthly.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-400">/ mo</span>
+                <span className="text-[10px] text-[#5c554b] font-mono">/ mo</span>
               </div>
-              <span className="text-[11px] text-slate-400 mt-2 block">
+              <span className="text-[11px] text-[#5c554b] mt-2 block font-mono">
                 Virtual Compensation + Operating Runtime
               </span>
             </div>
           </div>
 
           {/* Virtual Employees Roster */}
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
-            <h3 className="text-base font-heading font-bold text-slate-100 mb-4">
+          <div className="glass-panel p-6 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] shadow-xs">
+            <h3 className="text-base font-heading font-bold text-[#2a2622] mb-4">
               Autonomous Digital Employee Profiles & Operating Cost Center
             </h3>
 
@@ -440,60 +440,60 @@ export function WorkforceValuationDashboard({ apiUrl }: WorkforceValuationDashbo
               {virtualEmployees.map((emp) => (
                 <div
                   key={emp.agentId}
-                  className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between space-y-4"
+                  className="p-4 rounded-xl bg-[#f8f5ee] border border-[#b4ae9f] flex flex-col justify-between space-y-4 hover:border-[#2a2622] transition shadow-xs"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-bold text-xs flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-lg bg-[#2a2622] text-[#fffcf5] font-bold text-xs flex items-center justify-center">
                           {emp.name.charAt(0)}
                         </div>
                         <div>
-                          <strong className="text-xs font-semibold text-slate-100 block">
+                          <strong className="text-xs font-semibold text-[#2a2622] block">
                             {emp.name}
                           </strong>
-                          <span className="text-[10px] text-slate-400">{emp.grade}</span>
+                          <span className="text-[10px] text-[#5c554b] font-mono">{emp.grade}</span>
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900 text-slate-300 border border-slate-800">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#eee9df] text-[#2a2622] border border-[#b4ae9f]">
                         {emp.department}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-300 font-medium mb-3">
+                    <p className="text-[11px] text-[#5c554b] font-medium mb-3">
                       {emp.internalRoleTitle}
                     </p>
 
-                    <div className="space-y-1.5 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
+                    <div className="space-y-1.5 text-xs bg-[#fffcf5] p-2.5 rounded-lg border border-[#b4ae9f]">
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-slate-400">Virtual Salary:</span>
-                        <span className="font-mono text-cyan-400">
+                        <span className="text-[#5c554b]">Virtual Salary:</span>
+                        <span className="font-mono text-[#2a2622]">
                           Rp {emp.virtualCompensation.totalMonthly.toLocaleString('id-ID')}
                         </span>
                       </div>
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-slate-400">Monthly LLM Cost:</span>
-                        <span className="font-mono text-amber-400">
+                        <span className="text-[#5c554b]">Monthly LLM Cost:</span>
+                        <span className="font-mono text-[#c2410c]">
                           ${emp.operatingCost.llmCostUsd} (Rp{' '}
                           {(emp.operatingCost.llmCostUsd * 16000).toLocaleString('id-ID')})
                         </span>
                       </div>
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-slate-400">Tool & Infra Cost:</span>
-                        <span className="font-mono text-amber-400">
+                        <span className="text-[#5c554b]">Tool & Infra Cost:</span>
+                        <span className="font-mono text-[#c2410c]">
                           ${emp.operatingCost.toolCostUsd + emp.operatingCost.infrastructureCostUsd}
                         </span>
                       </div>
-                      <div className="flex justify-between pt-1 border-t border-slate-800 text-[11px]">
-                        <span className="text-slate-300 font-semibold">Total Cost:</span>
-                        <span className="font-mono text-emerald-400 font-bold">
+                      <div className="flex justify-between pt-1 border-t border-[#b4ae9f] text-[11px]">
+                        <span className="text-[#2a2622] font-semibold">Total Cost:</span>
+                        <span className="font-mono text-[#385747] font-bold">
                           Rp {emp.totalCostMonthlyIdr.toLocaleString('id-ID')}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-[10px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-800/60">
+                  <div className="text-[10px] text-[#5c554b] flex items-center justify-between pt-2 border-t border-[#b4ae9f] font-mono">
                     <span>Verified Tasks: {emp.verifiedTasksCount}</span>
                     <span>Projects: {emp.activeProjects.join(', ')}</span>
                   </div>

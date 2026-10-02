@@ -94,13 +94,13 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
   return (
     <div className="space-y-6">
       {/* Simulation Banner */}
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start space-x-3 text-xs text-amber-300">
-        <Sliders className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-2xl bg-[#e3dccd] border border-[#b4ae9f] flex items-start space-x-3 text-xs text-[#2a2622]">
+        <Sliders className="w-5 h-5 text-[#385747] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-semibold uppercase tracking-wider block">
+          <span className="font-semibold uppercase tracking-wider block text-[#2a2622]">
             WHAT-IF SIMULATION SANDBOX
           </span>
-          <p className="text-slate-300 leading-relaxed">
+          <p className="text-[#5c554b] leading-relaxed">
             Adjust functional workload allocations and domain overlap factors below. Dynamic calculations show the immediate impact on equivalent headcount (FTE), illustrative replacement valuation, and benchmark gap.
           </p>
         </div>
@@ -108,74 +108,74 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
 
       {/* Realtime Simulation Outcome KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+        <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-2xs">
+          <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide">
             Simulated Equivalent Capacity
           </span>
           <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-bold font-mono text-slate-100">{sim.totalFte}</span>
-            <span className="text-xs text-slate-400 font-medium">FTE</span>
+            <span className="text-2xl font-bold font-mono text-[#2a2622]">{sim.totalFte}</span>
+            <span className="text-xs text-[#5c554b] font-medium">FTE</span>
           </div>
           <div className="mt-2 flex items-center space-x-1 text-[11px]">
             {sim.fteDelta > 0 ? (
-              <span className="text-emerald-400 flex items-center font-semibold">
+              <span className="text-[#385747] flex items-center font-semibold">
                 <ArrowUpRight className="w-3.5 h-3.5" /> +{sim.fteDelta} FTE vs Baseline
               </span>
             ) : sim.fteDelta < 0 ? (
-              <span className="text-rose-400 flex items-center font-semibold">
+              <span className="text-[#c2410c] flex items-center font-semibold">
                 <ArrowDownRight className="w-3.5 h-3.5" /> {sim.fteDelta} FTE vs Baseline
               </span>
             ) : (
-              <span className="text-slate-400">Baseline unchanged (3.2 FTE)</span>
+              <span className="text-[#5c554b]">Baseline unchanged (3.2 FTE)</span>
             )}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+        <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-2xs">
+          <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide">
             Illustrative Monthly Value
           </span>
           <div className="flex items-baseline space-x-1.5">
-            <span className="text-xl font-bold font-mono text-emerald-400">
+            <span className="text-xl font-bold font-mono text-[#385747]">
               Rp {sim.totalMedian.toLocaleString('id-ID')}
             </span>
           </div>
           <div className="mt-2 flex items-center space-x-1 text-[11px]">
             {sim.valueDelta > 0 ? (
-              <span className="text-emerald-400 flex items-center font-semibold">
+              <span className="text-[#385747] flex items-center font-semibold">
                 <ArrowUpRight className="w-3.5 h-3.5" /> +Rp {sim.valueDelta.toLocaleString('id-ID')}
               </span>
             ) : sim.valueDelta < 0 ? (
-              <span className="text-rose-400 flex items-center font-semibold">
+              <span className="text-[#c2410c] flex items-center font-semibold">
                 <ArrowDownRight className="w-3.5 h-3.5" /> -Rp {Math.abs(sim.valueDelta).toLocaleString('id-ID')}
               </span>
             ) : (
-              <span className="text-slate-400">Matches baseline median</span>
+              <span className="text-[#5c554b]">Matches baseline median</span>
             )}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+        <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-2xs">
+          <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide">
             Simulated Benchmark Gap
           </span>
           <div className="flex items-baseline space-x-1.5">
-            <span className="text-xl font-bold font-mono text-cyan-400">
+            <span className="text-xl font-bold font-mono text-[#2a2622]">
               Rp {sim.simulatedGap.toLocaleString('id-ID')}
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 mt-2 block">
+          <span className="text-[11px] text-[#5c554b] mt-2 block">
             Actual: Rp {baseProfile.actualCompensation.totalMonthly.toLocaleString('id-ID')}
           </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 block mb-1 uppercase tracking-wide">
+        <div className="p-4 rounded-2xl bg-[#fffcf5] border border-[#b4ae9f] shadow-2xs flex flex-col justify-between">
+          <span className="text-[11px] font-semibold text-[#5c554b] block mb-1 uppercase tracking-wide">
             Scenario Control
           </span>
           <button
             onClick={handleReset}
-            className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center space-x-2 transition"
+            className="w-full py-2 px-3 rounded-xl bg-[#eee9df] hover:bg-[#e3dccd] text-[#2a2622] border border-[#b4ae9f] text-xs font-semibold flex items-center justify-center space-x-2 transition"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reset to Baseline</span>
@@ -184,10 +184,10 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
       </div>
 
       {/* Sliders & Toggles Table */}
-      <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/60">
-        <h4 className="text-sm font-semibold text-slate-200 mb-4 flex items-center justify-between">
+      <div className="p-5 rounded-2xl border border-[#b4ae9f] bg-[#fffcf5] shadow-xs">
+        <h4 className="text-sm font-semibold text-[#2a2622] mb-4 flex items-center justify-between">
           <span>Functional Roles & Allocation Parameters</span>
-          <span className="text-xs text-slate-400 font-normal">
+          <span className="text-xs text-[#5c554b] font-normal">
             {activeMappings.length} of {baseProfile.mappings.length} Roles Active
           </span>
         </h4>
@@ -208,8 +208,8 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
                 key={m.mappingId}
                 className={`p-4 rounded-xl border transition ${
                   isActive
-                    ? 'bg-slate-950/70 border-slate-800'
-                    : 'bg-slate-950/30 border-slate-800/40 opacity-50'
+                    ? 'bg-[#eee9df]/50 border-[#b4ae9f]'
+                    : 'bg-[#eee9df]/20 border-[#b4ae9f]/40 opacity-60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -218,40 +218,40 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
                       onClick={() => handleToggleMapping(m.mappingId)}
                       className={`p-1.5 rounded-lg border transition ${
                         isActive
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                          : 'bg-slate-800 border-slate-700 text-slate-500'
+                          ? 'bg-[#385747] border-[#385747] text-[#fffcf5]'
+                          : 'bg-[#e3dccd] border-[#b4ae9f] text-[#5c554b]'
                       }`}
                       title={isActive ? 'Deactivate from scenario' : 'Activate in scenario'}
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
                     <div>
-                      <strong className="text-xs font-semibold text-slate-100 block">
+                      <strong className="text-xs font-semibold text-[#2a2622] block">
                         {m.marketRoleTitle}
                       </strong>
-                      <span className="text-[11px] text-slate-400 font-mono">
+                      <span className="text-[11px] text-[#5c554b] font-mono">
                         Full-Time Benchmark: Rp {fullTimeMedian.toLocaleString('id-ID')}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-xs font-bold font-mono text-emerald-400 block">
+                    <span className="text-xs font-bold font-mono text-[#385747] block">
                       Rp {valueMedian.toLocaleString('id-ID')}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <span className="text-[10px] text-[#5c554b] font-mono">
                       Effective: {effectiveFte} FTE
                     </span>
                   </div>
                 </div>
 
                 {isActive && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800/60 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#b4ae9f]/60 text-xs">
                     {/* Allocation Slider */}
                     <div>
                       <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-400">Workload Allocation:</span>
-                        <span className="font-semibold text-amber-400">{currentAlloc}%</span>
+                        <span className="text-[#5c554b]">Workload Allocation:</span>
+                        <span className="font-semibold text-[#2a2622]">{currentAlloc}%</span>
                       </div>
                       <input
                         type="range"
@@ -265,15 +265,15 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
                             [m.mappingId]: parseInt(e.target.value, 10),
                           })
                         }
-                        className="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                        className="w-full accent-[#385747] h-1.5 bg-[#e3dccd] rounded-lg cursor-pointer"
                       />
                     </div>
 
                     {/* Overlap Mitigation Slider */}
                     <div>
                       <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-400">Overlap Mitigation:</span>
-                        <span className="font-semibold text-cyan-400">{(currentOverlap * 100).toFixed(0)}%</span>
+                        <span className="text-[#5c554b]">Overlap Mitigation:</span>
+                        <span className="font-semibold text-[#2a2622]">{(currentOverlap * 100).toFixed(0)}%</span>
                       </div>
                       <input
                         type="range"
@@ -287,7 +287,7 @@ export function WhatIfSimulator({ baseProfile }: WhatIfSimulatorProps) {
                             [m.mappingId]: parseFloat(e.target.value),
                           })
                         }
-                        className="w-full accent-cyan-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                        className="w-full accent-[#385747] h-1.5 bg-[#e3dccd] rounded-lg cursor-pointer"
                       />
                     </div>
                   </div>
