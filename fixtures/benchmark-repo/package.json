@@ -1,0 +1,17 @@
+{
+  "name": "simmaci-benchmark-repo",
+  "version": "1.0.0",
+  "description": "Realistic enterprise application repository for KDI Autonomous Software Delivery Benchmark Suite",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "test:auth": "node --test test/auth.test.js",
+    "test:export": "node --test test/export.test.js",
+    "test:attendance": "node --test test/attendance.test.js",
+    "test:users": "node --test test/users.test.js",
+    "lint": "node -e \"process.exit(0)\"",
+    "typecheck": "node -e \"process.exit(0)\"",
+    "build": "node -e \"process.exit(0)\""
+  }
+}

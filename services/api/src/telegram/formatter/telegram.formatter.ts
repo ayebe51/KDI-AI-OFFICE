@@ -682,5 +682,102 @@ export class TelegramFormatter {
 
     return redactSecretsFromString(out);
   }
+
+  // ==========================================================
+  // PHASE 16: AUTONOMOUS SOFTWARE DELIVERY BENCHMARK FORMATTERS
+  // ==========================================================
+
+  /**
+   * Section 16: Task Accepted Operational Card
+   */
+  public static formatBenchmarkTaskAccepted(
+    taskId: string,
+    title: string,
+    planSteps: string[] = ['inspect module', 'implement backend', 'implement UI', 'add tests', 'validate']
+  ): string {
+    const out =
+      `TASK ACCEPTED\n\n` +
+      `${taskId}\n` +
+      `${title}\n\n` +
+      `Plan:\n` +
+      planSteps.map((s) => `• ${s}`).join('\n') +
+      `\n\nExecution started.`;
+    return redactSecretsFromString(out);
+  }
+
+  /**
+   * Section 16: Implementation Complete Evidence Card
+   */
+  public static formatBenchmarkComplete(data: {
+    passed: number;
+    failed: number;
+    diffFilesCount: number;
+    commitHash?: string;
+  }): string {
+    const commitDisplay = data.commitHash ? data.commitHash.slice(0, 8) : 'pending';
+    const out =
+      `IMPLEMENTATION COMPLETE\n\n` +
+      `Tests:\n` +
+      `${data.passed} passed\n` +
+      `${data.failed} failed\n\n` +
+      `Git diff:\n` +
+      `${data.diffFilesCount} files\n\n` +
+      `Commit:\n` +
+      `${commitDisplay}`;
+    return redactSecretsFromString(out);
+  }
+
+  /**
+   * Section 16: Task Blocked Notification Card
+   */
+  public static formatBenchmarkBlocked(reason: string, humanAction: string): string {
+    const out =
+      `TASK BLOCKED\n\n` +
+      `Reason:\n` +
+      `${reason}\n\n` +
+      `Human action:\n` +
+      `${humanAction}`;
+    return redactSecretsFromString(out);
+  }
+
+  /**
+   * Benchmark Task List Overview
+   */
+  public static formatBenchmarkTaskList(tasks: Array<{ id: string; title: string; level: number; category: string }>): string {
+    const out =
+      `⚙️ *KDI AUTONOMOUS SOFTWARE DELIVERY BENCHMARK*\n\n` +
+      `Daftar Task Suite (10 Tasks, Level 1–5):\n\n` +
+      tasks.map((t) => `• \`${t.id}\` (L${t.level} - ${t.category}): ${t.title}`).join('\n') +
+      `\n\n_Ketik \`/benchmark run <taskId>\` atau \`/build <perintah>\` untuk memulai eksekusi otonom._`;
+    return redactSecretsFromString(out);
+  }
+
+  /**
+   * Benchmark Status & Autonomy Overview
+   */
+  public static formatBenchmarkStatus(metrics: {
+    totalRuns: number;
+    completedRuns: number;
+    autonomousCompletionRate: number;
+    firstPassSuccessRate: number;
+    averageRecoveryRate: number;
+    averageCycleTimeSeconds: number;
+    unnecessaryInterventions: number;
+    necessaryApprovals: number;
+  }): string {
+    const out =
+      `📊 *AUTONOMOUS SOFTWARE DELIVERY BENCHMARK METRICS*\n\n` +
+      `• Total Runs: *${metrics.totalRuns}*\n` +
+      `• Completed Runs: *${metrics.completedRuns}*\n` +
+      `• Autonomous Completion: *${Math.round(metrics.autonomousCompletionRate * 100)}%*\n` +
+      `• First-Pass Success: *${Math.round(metrics.firstPassSuccessRate * 100)}%*\n` +
+      `• Recovery Rate: *${Math.round(metrics.averageRecoveryRate * 100)}%*\n` +
+      `• Avg Cycle Time: *${metrics.averageCycleTimeSeconds}s*\n` +
+      `• Unnecessary Interventions: *${metrics.unnecessaryInterventions}* (Target: 0)\n` +
+      `• Necessary Approvals: *${metrics.necessaryApprovals}*\n\n` +
+      `_Tingkat Otonomi: KDI mengeksekusi software delivery nyata tanpa intervensi manusia manual._`;
+    return redactSecretsFromString(out);
+  }
 }
+
 

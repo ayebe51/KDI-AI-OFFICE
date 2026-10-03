@@ -12,6 +12,7 @@ import { Login } from './components/Login';
 import { PortfolioGalleryView } from './components/portfolio/index.js';
 import { WorkforceValuationDashboard } from './components/workforce/index';
 import { CompanyOSView } from './components/CompanyOSView';
+import { EngineeringControlPlane } from './components/benchmark/EngineeringControlPlane.js';
 import type { AgentState, WSEventEnvelope, AgentStatusChangedPayload } from '@kdi/types';
 
 // ── Navigation tab definitions ────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const PUBLIC_TABS = [
 ];
 
 const OWNER_TABS = [
+  { id: 'benchmark'   as const, label: 'Control Plane',  icon: Cpu      },
   { id: 'dashboard'   as const, label: 'Operations',     icon: Activity },
   { id: 'runtime'     as const, label: 'Agent Runtime',  icon: Layers   },
   { id: 'engineering' as const, label: 'Engineering',    icon: Terminal },
@@ -36,7 +38,7 @@ export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('kdi_token') || 'guest_public_token');
   const [username, setUsername] = useState<string>(() => localStorage.getItem('kdi_user') || 'Pengunjung (Visitor)');
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'office' | 'portfolio' | 'workforce' | 'company' | 'dashboard' | 'runtime' | 'engineering' | 'graph' | 'llm' | 'health' | 'command'>('office');
+  const [activeTab, setActiveTab] = useState<'office' | 'portfolio' | 'workforce' | 'company' | 'benchmark' | 'dashboard' | 'runtime' | 'engineering' | 'graph' | 'llm' | 'health' | 'command'>('office');
 
   const isOwner = Boolean(token && token !== 'guest_public_token');
 
@@ -283,6 +285,10 @@ export function App() {
 
         {activeTab === 'company' && (
           <CompanyOSView apiUrl={API_URL} />
+        )}
+
+        {activeTab === 'benchmark' && (
+          <EngineeringControlPlane apiUrl={API_URL} events={eventLog} isConnected={wsConnected} />
         )}
 
         {activeTab === 'dashboard' && (

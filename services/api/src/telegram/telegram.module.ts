@@ -15,6 +15,7 @@ import { LLMModule } from '../llm/llm.module.js';
 import { OrganizationModule } from '../organization/organization.module.js';
 import { LearningModule } from '../learning/learning.module.js';
 import { StrategyModule } from '../strategy/strategy.module.js';
+import { BenchmarkModule } from '../benchmark/benchmark.module.js';
 
 import { TelegramController } from './telegram.controller.js';
 import { TelegramClient } from './client/telegram.client.js';
@@ -39,6 +40,7 @@ import { RedisService } from '../database/redis.service.js';
     forwardRef(() => OrganizationModule),
     forwardRef(() => LearningModule),
     forwardRef(() => StrategyModule),
+    forwardRef(() => BenchmarkModule),
   ],
   controllers: [TelegramController],
   providers: [

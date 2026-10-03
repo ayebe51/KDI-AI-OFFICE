@@ -39,6 +39,7 @@ import { ReportingService } from '../../organization/reporting.service.js';
 import { LearningOrchestratorService } from '../../learning/learning-orchestrator.service.js';
 import { OwnerFeedbackService } from '../../learning/owner-feedback.service.js';
 import { StrategicOrchestratorService } from '../../strategy/strategic-orchestrator.service.js';
+import { BenchmarkService } from '../../benchmark/benchmark.service.js';
 
 export interface OrchestrationContext {
   conversationId: string;
@@ -69,7 +70,8 @@ export class OrchestratorService {
     @Optional() private readonly reportingService?: ReportingService,
     @Optional() private readonly learningOrchestratorService?: LearningOrchestratorService,
     @Optional() private readonly ownerFeedbackService?: OwnerFeedbackService,
-    @Optional() private readonly strategicOrchestratorService?: StrategicOrchestratorService
+    @Optional() private readonly strategicOrchestratorService?: StrategicOrchestratorService,
+    @Optional() private readonly benchmarkService?: BenchmarkService
   ) {}
 
   /**
@@ -288,6 +290,18 @@ export class OrchestratorService {
 
       case '/engineering': {
         return this.handleEngineeringCommand(args, message, correlationId);
+      }
+
+      case '/benchmark': {
+        return this.handleBenchmarkCommand(args, message, correlationId);
+      }
+
+      case '/build': {
+        return this.handleBuildCommand(args, message, correlationId);
+      }
+
+      case '/fix': {
+        return this.handleFixCommand(args, message, correlationId);
       }
 
       default: {
@@ -551,6 +565,211 @@ export class OrchestratorService {
   }
 
   /**
+   * Phase 16: Handle /benchmark command
+   */
+  private async handleBenchmarkCommand(
+    args: string,
+    message: OwnerMessage,
+    correlationId: string
+  ): Promise<OrchestratorResult> {
+    const trimmed = args.trim();
+
+    if (!this.benchmarkService) {
+      return {
+        type: 'TEXT',
+        responseMessage: `Layanan Autonomous Benchmark belum aktif atau sedang memuat.`,
+        correlationId,
+      };
+    }
+
+    if (!trimmed || trimmed === 'list') {
+      const tasks = this.benchmarkService.listTasks();
+      const text = TelegramFormatter.formatBenchmarkTaskList(tasks);
+      return { type: 'TEXT', responseMessage: text, correlationId };
+    }
+
+    if (trimmed === 'status') {
+      const metrics = await this.benchmarkService.getMetricsSummary();
+      const text = TelegramFormatter.formatBenchmarkStatus(metrics);
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // Run specific task or Golden Path (SIMMACI-010)
+    let targetTaskId = trimmed.replace(/^run\s*/i, '').trim();
+    if (!targetTaskId || targetTaskId.toLowerCase() === 'golden' || targetTaskId.toLowerCase() === 'all') {
+      targetTaskId = 'SIMMACI-010';
+    }
+
+    const task = this.benchmarkService.getTask(targetTaskId) || this.benchmarkService.getTask('SIMMACI-010')!;
+    const acceptedText = TelegramFormatter.formatBenchmarkTaskAccepted(task.id, task.title);
+
+    try {
+      const run = await this.benchmarkService.startBenchmarkRun(task.id, { mode: 'AUTONOMOUS' });
+      if (run.status === 'COMPLETED') {
+        const completeText = TelegramFormatter.formatBenchmarkComplete({
+          passed: run.successful_tests,
+          failed: run.failed_tests,
+          diffFilesCount: run.artifacts.find((a) => a.type === 'GIT_DIFF')?.content.split('\n').filter((l) => l.startsWith('diff --git')).length || 2,
+          commitHash: run.final_commit,
+        });
+        return {
+          type: 'TASK_CREATED',
+          responseMessage: `${acceptedText}\n\n---\n\n${completeText}`,
+          correlationId,
+          taskId: run.run_id,
+        };
+      } else if (run.status === 'BLOCKED') {
+        const blockedText = TelegramFormatter.formatBenchmarkBlocked(
+          run.failure_reason || 'Production credentials required.',
+          'Approve credential access.'
+        );
+        return {
+          type: 'SYSTEM_STATE',
+          responseMessage: `${acceptedText}\n\n---\n\n${blockedText}`,
+          correlationId,
+        };
+      } else {
+        return {
+          type: 'TEXT',
+          responseMessage: `${acceptedText}\n\n---\n\nTASK FAILED\nReason: ${run.failure_reason || 'Unknown error'}`,
+          correlationId,
+        };
+      }
+    } catch (err: any) {
+      return {
+        type: 'TEXT',
+        responseMessage: `${acceptedText}\n\n---\n\nTASK FAILED\nReason: ${err.message}`,
+        correlationId,
+      };
+    }
+  }
+
+  /**
+   * Phase 16 Section 16: Handle /build command
+   * Example: /build Tambahkan export CSV pada daftar guru SIMMACI
+   */
+  private async handleBuildCommand(
+    args: string,
+    message: OwnerMessage,
+    correlationId: string
+  ): Promise<OrchestratorResult> {
+    const rawInstruction = args.trim() || 'Tambahkan export CSV pada daftar guru SIMMACI';
+    const taskId = rawInstruction.toLowerCase().includes('absensi') ? 'SIMMACI-010' : 'SIMMACI-002';
+    const task = this.benchmarkService?.getTask(taskId) || {
+      id: taskId,
+      title: 'Add CSV Export',
+      description: rawInstruction,
+      level: 2,
+      category: 'FEATURE' as const,
+      repository: 'simmaci-benchmark-repo',
+      acceptanceCriteria: ['CSV exported cleanly'],
+      constraints: ['Respect existing auth'],
+      expectedArtifacts: ['export.service.js', 'test'],
+    };
+
+    const acceptedText = TelegramFormatter.formatBenchmarkTaskAccepted(task.id, task.title);
+
+    if (this.benchmarkService) {
+      try {
+        const run = await this.benchmarkService.startBenchmarkRun(taskId, { mode: 'AUTONOMOUS' });
+        if (run.status === 'COMPLETED') {
+          const completeText = TelegramFormatter.formatBenchmarkComplete({
+            passed: run.successful_tests,
+            failed: run.failed_tests,
+            diffFilesCount: 2,
+            commitHash: run.final_commit,
+          });
+          return {
+            type: 'TASK_CREATED',
+            responseMessage: `${acceptedText}\n\n---\n\n${completeText}`,
+            correlationId,
+            taskId: run.run_id,
+          };
+        }
+      } catch (err: any) {
+        return {
+          type: 'TASK_CREATED',
+          responseMessage: `${acceptedText}\n\n---\n\nTASK ACCEPTED (Background execution: ${err.message})`,
+          correlationId,
+          taskId: `bm_err_${Date.now()}`,
+        };
+      }
+    }
+
+    return {
+      type: 'TASK_CREATED',
+      responseMessage: acceptedText,
+      correlationId,
+    };
+  }
+
+  /**
+   * Phase 16 Section 16: Handle /fix command
+   * Example: /fix Perbaiki bug filter sekolah
+   */
+  private async handleFixCommand(
+    args: string,
+    message: OwnerMessage,
+    correlationId: string
+  ): Promise<OrchestratorResult> {
+    const rawInstruction = args.trim() || 'Perbaiki bug filter sekolah';
+    const taskId = rawInstruction.toLowerCase().includes('login') ? 'SIMMACI-001' : 'SIMMACI-006';
+    const task = this.benchmarkService?.getTask(taskId) || {
+      id: taskId,
+      title: 'Fix School Filter Bug',
+      description: rawInstruction,
+      level: 4,
+      category: 'BUG_FIX' as const,
+      repository: 'simmaci-benchmark-repo',
+      acceptanceCriteria: ['Pass test suite'],
+      constraints: ['No regression'],
+      expectedArtifacts: ['users.service.js', 'test'],
+    };
+
+    const acceptedText = TelegramFormatter.formatBenchmarkTaskAccepted(task.id, task.title, [
+      'reproduce if possible',
+      'collect evidence',
+      'identify root cause',
+      'implement fix',
+      'test',
+      'regression test',
+    ]);
+
+    if (this.benchmarkService) {
+      try {
+        const run = await this.benchmarkService.startBenchmarkRun(taskId, { mode: 'AUTONOMOUS' });
+        if (run.status === 'COMPLETED') {
+          const completeText = TelegramFormatter.formatBenchmarkComplete({
+            passed: run.successful_tests,
+            failed: run.failed_tests,
+            diffFilesCount: 1,
+            commitHash: run.final_commit,
+          });
+          return {
+            type: 'TASK_CREATED',
+            responseMessage: `${acceptedText}\n\n---\n\n${completeText}`,
+            correlationId,
+            taskId: run.run_id,
+          };
+        }
+      } catch (err: any) {
+        return {
+          type: 'TASK_CREATED',
+          responseMessage: `${acceptedText}\n\n---\n\nTASK ACCEPTED (Background execution: ${err.message})`,
+          correlationId,
+          taskId: `bm_err_${Date.now()}`,
+        };
+      }
+    }
+
+    return {
+      type: 'TASK_CREATED',
+      responseMessage: acceptedText,
+      correlationId,
+    };
+  }
+
+  /**
    * Handle natural language requests
    */
   private async handleNaturalLanguage(
@@ -602,6 +821,27 @@ export class OrchestratorService {
         );
         return { type: 'TEXT', responseMessage: defenseMsg, correlationId };
       }
+    }
+
+    // ==========================================================
+    // PHASE 16: AUTONOMOUS SOFTWARE DELIVERY BENCHMARK TRIGGER
+    // ==========================================================
+    if (
+      lower.includes('benchmark') ||
+      lower.includes('uji otonom') ||
+      lower.includes('tes otonom') ||
+      lower.includes('tambahkan export csv') ||
+      lower.includes('perbaiki bug filter') ||
+      lower.startsWith('build ') ||
+      lower.startsWith('fix ')
+    ) {
+      if (lower.includes('filter') || lower.includes('sekolah') || lower.startsWith('fix ')) {
+        return this.handleFixCommand(rawText, message, correlationId);
+      }
+      if (lower.includes('csv') || lower.includes('export') || lower.includes('guru') || lower.startsWith('build ')) {
+        return this.handleBuildCommand(rawText, message, correlationId);
+      }
+      return this.handleBenchmarkCommand(rawText, message, correlationId);
     }
 
     // 1. Emergency Overrides

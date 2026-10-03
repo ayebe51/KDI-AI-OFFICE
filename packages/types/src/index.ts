@@ -3818,6 +3818,161 @@ export interface LongHorizonPilotLifecycle {
   finalVerdict: string;
 }
 
+// ==========================================================
+// PHASE 16: AUTONOMOUS SOFTWARE DELIVERY BENCHMARK TYPES
+// ==========================================================
+
+export type BenchmarkRunStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'BLOCKED'
+  | 'PARTIAL';
+
+export type BenchmarkMode = 'AUTONOMOUS' | 'SUPERVISED';
+
+export type BenchmarkTaskLevel = 1 | 2 | 3 | 4 | 5;
+
+export type BenchmarkTaskCategory =
+  | 'BUG_FIX'
+  | 'FEATURE'
+  | 'MULTI_LAYER'
+  | 'INVESTIGATION'
+  | 'AUTONOMOUS_PROJECT';
+
+export type BenchmarkFailureCategory =
+  | 'PLANNING_FAILURE'
+  | 'TOOL_FAILURE'
+  | 'CODE_FAILURE'
+  | 'TEST_FAILURE'
+  | 'ENVIRONMENT_FAILURE'
+  | 'AUTHORIZATION_FAILURE'
+  | 'RESOURCE_FAILURE'
+  | 'REPOSITORY_FAILURE'
+  | 'UNRECOVERABLE_FAILURE';
+
+export type HumanInterventionType =
+  | 'H1_CLARIFICATION'
+  | 'H2_CODE_CORRECTION'
+  | 'H3_TOOL_CORRECTION'
+  | 'H4_ARCHITECTURE_GUIDANCE'
+  | 'H5_MANUAL_RECOVERY'
+  | 'H6_APPROVAL';
+
+export interface HumanIntervention {
+  id: string;
+  runId: string;
+  type: HumanInterventionType;
+  description: string;
+  isNecessary: boolean;
+  actor: string;
+  timestamp: string;
+}
+
+export interface BenchmarkTask {
+  id: string;
+  title: string;
+  repository: string;
+  description: string;
+  level: BenchmarkTaskLevel;
+  category: BenchmarkTaskCategory;
+  acceptanceCriteria: string[];
+  constraints: string[];
+  expectedArtifacts: string[];
+  initialBranch?: string;
+  targetPath?: string;
+}
+
+export interface BenchmarkStep {
+  stepId: string;
+  name: string;
+  actor: string;
+  timestamp: string;
+  durationMs: number;
+  status: 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'WAITING_APPROVAL';
+  details?: Record<string, unknown>;
+}
+
+export interface BenchmarkAttempt {
+  attemptNumber: number;
+  startedAt: string;
+  completedAt?: string;
+  durationMs: number;
+  status: 'SUCCESS' | 'FAILED' | 'RECOVERING';
+  agent: string;
+  hypothesis?: string;
+  changes: string[];
+  testOutput?: string;
+  failureReason?: string;
+  failureCategory?: BenchmarkFailureCategory;
+}
+
+export interface BenchmarkArtifact {
+  artifactId: string;
+  type: 'REPORT_JSON' | 'REPORT_MD' | 'EXECUTION_LOG' | 'GIT_DIFF' | 'TEST_RESULTS' | 'PATCH';
+  filename: string;
+  content: string;
+  hash: string;
+  createdAt: string;
+}
+
+export interface BenchmarkApproval {
+  approvalId: string;
+  action: string;
+  riskLevel: RiskLevel;
+  requestedAt: string;
+  resolvedAt?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  resolvedBy?: string;
+  isNecessary: boolean;
+  reason: string;
+}
+
+export interface BenchmarkMetric {
+  taskCompletion: boolean;
+  autonomousCompletion: boolean;
+  firstPassSuccess: boolean;
+  recoverySuccessRate: number;
+  humanInterventionCount: number;
+  unnecessaryInterventions: number;
+  necessaryApprovals: number;
+  testReliability: number;
+  deliveryCycleTimeMs: number;
+  reworkRate: number;
+  evidenceCompleteness: number;
+}
+
+export interface BenchmarkRun {
+  run_id: string;
+  task_id: string;
+  repository: string;
+  branch: string;
+  started_at: string;
+  completed_at?: string;
+  status: BenchmarkRunStatus;
+  mode: BenchmarkMode;
+  human_interventions: number;
+  agent_count: number;
+  tool_calls: number;
+  test_runs: number;
+  failed_tests: number;
+  successful_tests: number;
+  recovery_count: number;
+  approval_count: number;
+  final_artifact?: string;
+  final_commit?: string;
+  failure_reason?: string;
+  failure_taxonomy?: BenchmarkFailureCategory;
+  metrics: BenchmarkMetric;
+  attempts: BenchmarkAttempt[];
+  steps: BenchmarkStep[];
+  artifacts: BenchmarkArtifact[];
+  approvals: BenchmarkApproval[];
+  interventions: HumanIntervention[];
+}
+
+
 
 
 

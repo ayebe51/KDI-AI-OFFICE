@@ -22,6 +22,8 @@ import { StrategyModule } from './strategy/strategy.module.js';
 // Phase 15.1: Company OS + Business AI Gateway
 import { CompanyModule } from './company/company.module.js';
 import { AIGatewayModule } from './ai-gateway/ai-gateway.module.js';
+// Phase 16: Autonomous Software Delivery Benchmark
+import { BenchmarkModule } from './benchmark/benchmark.module.js';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { AIGatewayModule } from './ai-gateway/ai-gateway.module.js';
     // Phase 15.1: Company OS + Business AI Gateway
     CompanyModule,
     AIGatewayModule,
+    // Phase 16: Autonomous Software Delivery Benchmark
+    BenchmarkModule,
   ],
 })
 export class AppModule {}
