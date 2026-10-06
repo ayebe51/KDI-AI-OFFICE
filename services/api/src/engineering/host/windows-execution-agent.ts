@@ -43,6 +43,7 @@ export class WindowsExecutionAgent {
   private isRunning = false;
   private activeTaskIds = new Set<string>();
   private readonly maxConcurrentTasks: number;
+  private heartbeatInterval?: NodeJS.Timeout;
 
   constructor(options?: {
     hostId?: string;
@@ -132,6 +133,13 @@ export class WindowsExecutionAgent {
     // 4. Hook transport into remote execution channel
     this.channelService.setTransportHandler(async (req) => this.handleExecutionRequest(req));
 
+    this.heartbeatInterval = setInterval(() => {
+      this.sendHeartbeat().catch(() => {});
+    }, 10000);
+    if (this.heartbeatInterval.unref) {
+      this.heartbeatInterval.unref();
+    }
+
     this.logger.info(
       'initialize',
       `Windows Execution Agent ready on ${this.hostId} (Antigravity: ${discovery.version}, Executor: ${executorStatus})`
@@ -184,6 +192,9 @@ export class WindowsExecutionAgent {
       `Received authorized execution request ${request.requestId} for task ${request.taskId} (${request.project})`
     );
 
+    // Refresh heartbeat on incoming activity
+    await this.sendHeartbeat().catch(() => {});
+
     // 1. Concurrency and resource check (§18 & §19)
     if (this.activeTaskIds.size >= this.maxConcurrentTasks) {
       return {
@@ -211,7 +222,8 @@ export class WindowsExecutionAgent {
     }
 
     // 2. Repository allowlist resolution (§12 & §13)
-    const repoResolution = this.allowlistService.resolveHostRepositoryPath(request.project);
+    const targetRepoSlug = request.repository || request.project;
+    const repoResolution = this.allowlistService.resolveHostRepositoryPath(targetRepoSlug);
     if (!repoResolution.allowed || !repoResolution.resolvedPath) {
       return {
         requestId: request.requestId,
@@ -464,6 +476,10 @@ export class WindowsExecutionAgent {
    */
   public async shutdown(): Promise<void> {
     this.isRunning = false;
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = undefined;
+    }
     if (this.registrationInfo) {
       this.registrationInfo.status = 'OFFLINE';
       this.registryService.recordHeartbeat({

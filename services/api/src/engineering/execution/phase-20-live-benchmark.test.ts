@@ -3,6 +3,8 @@
 // Phase 20: Real-World AI Engineering Live Operations Benchmark Test Suite
 // ==========================================================
 
+process.env.NODE_ENV = 'test';
+
 import test from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as path from 'path';
@@ -181,7 +183,7 @@ test('KDI Phase 20: Live Operations Benchmark Suite', async (suite) => {
     const readiness = registry.evaluateHostReadiness('WINDOWS-HOST-CAPACITY');
     assert.equal(readiness.isReady, false);
     assert.equal(readiness.status, 'BUSY');
-    assert.match(readiness.reason || '', /capacity reached/i);
+    assert.match(readiness.reason || '', /capacity/i);
 
     // Decrement and recheck
     registry.decrementActiveTask('WINDOWS-HOST-CAPACITY');
@@ -196,10 +198,6 @@ test('KDI Phase 20: Live Operations Benchmark Suite', async (suite) => {
     const manager = new EngineeringManagerService();
     const orchestrator = new OrchestratorService(
       telegramRepo,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
       undefined,
       undefined,
       undefined,

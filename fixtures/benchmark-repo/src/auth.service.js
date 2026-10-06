@@ -50,4 +50,16 @@ export class AuthService {
     }
     return session;
   }
+
+  validateSession(token) {
+    return Boolean(this.verifyToken(token));
+  }
+
+  refreshToken(token) {
+    const session = this.verifyToken(token);
+    if (!session) return null;
+    const newToken = `tok_${session.userId}_${Date.now()}`;
+    this.sessions.set(newToken, { ...session, expiresAt: Date.now() + 3600000 });
+    return { success: true, token: newToken, user: { id: session.userId, role: session.role } };
+  }
 }

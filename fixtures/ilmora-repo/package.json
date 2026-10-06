@@ -1,0 +1,9 @@
+{
+  "name": "ilmora-lms-repo",
+  "version": "1.0.0",
+  "description": "Realistic ILMORA LMS platform fixture for KDI benchmarks",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/**/*.test.js"
+  }
+}

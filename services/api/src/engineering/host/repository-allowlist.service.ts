@@ -53,10 +53,14 @@ export class RepositoryAllowlistService {
     });
 
     // 2. SIMMACI (School Management System)
-    const simmaciPath = path.resolve(workspaceRoot, '..', 'SIMMACI');
-    const simmaciActual = fs.existsSync(simmaciPath)
-      ? simmaciPath
-      : path.join(workspaceRoot, 'fixtures', 'ai-engineering-repo');
+    const simmaciExternal = path.resolve(workspaceRoot, '..', 'SIMMACI');
+    const simmaciFixture = path.join(workspaceRoot, 'fixtures', 'benchmark-repo');
+    const simmaciActual =
+      process.env.KDI_LIVE_REPOS === 'true' && fs.existsSync(simmaciExternal)
+        ? simmaciExternal
+        : fs.existsSync(simmaciFixture)
+        ? simmaciFixture
+        : simmaciExternal;
 
     this.allowedRepositories.set('simmaci', {
       slug: 'simmaci',
@@ -68,10 +72,14 @@ export class RepositoryAllowlistService {
     });
 
     // 3. ILMORA (Online Learning & Quiz Platform)
-    const ilmoraPath = path.resolve(workspaceRoot, '..', 'ILMORA');
-    const ilmoraActual = fs.existsSync(ilmoraPath)
-      ? ilmoraPath
-      : path.join(workspaceRoot, 'fixtures', 'benchmark-repo');
+    const ilmoraExternal = path.resolve(workspaceRoot, '..', 'ILMORA');
+    const ilmoraFixture = path.join(workspaceRoot, 'fixtures', 'ilmora-repo');
+    const ilmoraActual =
+      process.env.KDI_LIVE_REPOS === 'true' && fs.existsSync(ilmoraExternal)
+        ? ilmoraExternal
+        : fs.existsSync(ilmoraFixture)
+        ? ilmoraFixture
+        : ilmoraExternal;
 
     this.allowedRepositories.set('ilmora', {
       slug: 'ilmora',
@@ -91,7 +99,7 @@ export class RepositoryAllowlistService {
         approvedPath: demoCalcPath,
         defaultBranch: 'main',
         protectedBranches: ['main', 'master', 'production'],
-        allowedRoles: ['BE', 'QA'],
+        allowedRoles: ['BE', 'FE', 'QA', 'SECURITY', 'DEVOPS', 'FULLSTACK'],
       });
     }
 
