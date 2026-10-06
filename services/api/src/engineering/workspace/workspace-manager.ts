@@ -71,11 +71,30 @@ export class WorkspaceManager {
           `Created git worktree at ${workspacePath} on branch ${safeBranch}`
         );
       } catch (err: any) {
-        this.logger.warn(
-          'allocateWorkspace',
-          `Git worktree creation failed (${err.message}). Falling back to isolated directory mirror.`
-        );
-        isWorktree = false;
+        if (err.message && err.message.includes('already exists')) {
+          try {
+            await execAsync(`git worktree add "${workspacePath}" "${safeBranch}"`, {
+              cwd: repoPath,
+            });
+            isWorktree = true;
+            this.logger.info(
+              'allocateWorkspace',
+              `Attached existing branch in worktree at ${workspacePath} on branch ${safeBranch}`
+            );
+          } catch (innerErr: any) {
+            this.logger.warn(
+              'allocateWorkspace',
+              `Git worktree creation failed (${innerErr.message}). Falling back to isolated directory mirror.`
+            );
+            isWorktree = false;
+          }
+        } else {
+          this.logger.warn(
+            'allocateWorkspace',
+            `Git worktree creation failed (${err.message}). Falling back to isolated directory mirror.`
+          );
+          isWorktree = false;
+        }
       }
     }
 

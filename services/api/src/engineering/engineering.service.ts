@@ -28,6 +28,8 @@ import { RedisService } from '../database/redis.service.js';
 import { Neo4jService } from '../database/neo4j.service.js';
 import { EventsGateway } from '../websocket/events.gateway.js';
 import { StructuredLogger } from '@kdi/shared';
+import { EngineeringOSService } from './operating-system/engineering-os.service.js';
+import { EngineeringManagerService } from './manager/engineering-manager.service.js';
 
 @Injectable()
 export class EngineeringService implements OnModuleInit {
@@ -42,6 +44,8 @@ export class EngineeringService implements OnModuleInit {
   public readonly workspaceManager: WorkspaceManager;
   public readonly executorService: EngineeringExecutorService;
   public readonly agentReviewer: EngineeringAgentService;
+  public readonly osService: EngineeringOSService;
+  public readonly managerService: EngineeringManagerService;
 
   constructor(
     private readonly postgresService: PostgresService,
@@ -49,12 +53,16 @@ export class EngineeringService implements OnModuleInit {
     private readonly neo4jService: Neo4jService,
     private readonly eventsGateway: EventsGateway,
     @Optional() executorService?: EngineeringExecutorService,
-    @Optional() agentReviewer?: EngineeringAgentService
+    @Optional() agentReviewer?: EngineeringAgentService,
+    @Optional() osService?: EngineeringOSService,
+    @Optional() managerService?: EngineeringManagerService
   ) {
     this.approvalGate = new ApprovalGateService();
     this.workspaceManager = new WorkspaceManager();
     this.agentReviewer = agentReviewer || new EngineeringAgentService();
     this.executorService = executorService || new EngineeringExecutorService(this.approvalGate, this.agentReviewer);
+    this.osService = osService || new EngineeringOSService();
+    this.managerService = managerService || new EngineeringManagerService();
     this.eventEmitter = new EngineeringEventEmitter(this.eventsGateway, this.redisService);
     this.repository = new EngineeringRepository(this.postgresService);
     this.neo4jGraph = new Neo4jEngineeringService(this.neo4jService);

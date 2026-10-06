@@ -88,4 +88,70 @@ export class EngineeringController {
     }
     return { status: 'SUCCESS', approval: resolved };
   }
+
+  // ==========================================================
+  // PHASE 16: ENGINEERING OPERATING SYSTEM ENDPOINTS
+  // ==========================================================
+
+  @Post('work-requests')
+  async createWorkRequest(
+    @Body() body: { text: string; requester?: string; execute?: boolean }
+  ) {
+    if (!body.text) {
+      throw new BadRequestException('Request text is required');
+    }
+    const requester = body.requester || 'Human Operator';
+    if (body.execute) {
+      const result = await this.engineeringService.osService.processInboundRequest(
+        body.text,
+        requester,
+        this.engineeringService.executorService
+      );
+      return { status: 'SUCCESS', ...result };
+    }
+    const workRequest = await this.engineeringService.osService.workRequests.createWorkRequest(
+      body.text,
+      requester
+    );
+    return { status: 'SUCCESS', workRequest };
+  }
+
+  @Get('work-requests')
+  listWorkRequests() {
+    return {
+      status: 'SUCCESS',
+      workRequests: this.engineeringService.osService.workRequests.listWorkRequests(),
+    };
+  }
+
+  @Get('work-requests/:id')
+  getWorkRequest(@Param('id') id: string) {
+    const req = this.engineeringService.osService.workRequests.getWorkRequest(id);
+    if (!req) throw new NotFoundException(`WorkRequest ${id} not found`);
+    return { status: 'SUCCESS', workRequest: req };
+  }
+
+  @Get('attention')
+  getAttention() {
+    const pendingCount = this.engineeringService.listPendingApprovals().length;
+    const attention = this.engineeringService.osService.getAttentionSummary(pendingCount);
+    return { status: 'SUCCESS', attention };
+  }
+
+  @Get('analytics')
+  getAnalytics() {
+    return {
+      status: 'SUCCESS',
+      analytics: this.engineeringService.osService.getAnalytics(),
+    };
+  }
+
+  @Get('projects')
+  listProjects() {
+    return {
+      status: 'SUCCESS',
+      projects: this.engineeringService.osService.projectKnowledge.listProjects(),
+    };
+  }
 }
+

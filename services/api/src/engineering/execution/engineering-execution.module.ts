@@ -15,6 +15,11 @@ import { EngineeringCodingWorker } from './coding-worker.service.js';
 import { CodingWorkerAdapter } from './adapters/coding-worker.adapter.js';
 import { AntigravityDiscoveryService } from './antigravity-discovery.service.js';
 import { EngineeringHostService } from './engineering-host.service.js';
+import { ControlPlaneService } from '../control-plane/control-plane.service.js';
+import { ControlPlanePersistenceService } from '../control-plane/control-plane-persistence.service.js';
+import { EngineeringQueueService } from '../control-plane/queue.service.js';
+import { WorktreeLeaseService } from '../control-plane/worktree-lease.service.js';
+import { RecoveryService } from '../control-plane/recovery.service.js';
 
 @Module({
   providers: [
@@ -27,6 +32,11 @@ import { EngineeringHostService } from './engineering-host.service.js';
     EngineeringCodingWorker,
     AcceptanceCriteriaEngine,
     EngineeringAgentService,
+    ControlPlanePersistenceService,
+    EngineeringQueueService,
+    WorktreeLeaseService,
+    RecoveryService,
+    ControlPlaneService,
     EngineeringExecutorService,
   ],
   exports: [
@@ -40,6 +50,11 @@ import { EngineeringHostService } from './engineering-host.service.js';
     AntigravityExecutorAdapter,
     CodingWorkerAdapter,
     ApprovalGateService,
+    ControlPlaneService,
+    ControlPlanePersistenceService,
+    EngineeringQueueService,
+    WorktreeLeaseService,
+    RecoveryService,
   ],
 })
 export class EngineeringExecutionModule {}

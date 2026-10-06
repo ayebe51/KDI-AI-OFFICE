@@ -474,8 +474,9 @@ test('Phase 15.2: AI Engineering Execution Bridge Verification Suite', async (su
     });
     service.registerExecutor('MOCK_RETRY', mockExecutor);
 
+    const retryTaskId = `ENG-RETRY-101-${Date.now()}`;
     const context: EngineeringTaskContext = {
-      taskId: 'ENG-RETRY-101',
+      taskId: retryTaskId,
       project: 'SIMMACI',
       repository: 'SIMMACI',
       repositoryPath: demoRepo,
@@ -487,7 +488,7 @@ test('Phase 15.2: AI Engineering Execution Bridge Verification Suite', async (su
       description: 'Retry demonstration',
       acceptanceCriteria: ['Tests pass'],
       constraints: [],
-      branch: 'fix/retry-101',
+      branch: `fix/retry-101-${Date.now().toString(36)}`,
       executor: 'MOCK_RETRY',
       timeout: 30000,
       environment: {},
@@ -507,7 +508,7 @@ test('Phase 15.2: AI Engineering Execution Bridge Verification Suite', async (su
     assert.strictEqual(res2.attempts[0].status, 'COMMAND_FAILED'); // Previous attempt preserved!
     assert.strictEqual(res2.attempts[1].status, 'READY_FOR_APPROVAL'); // Current attempt succeeded!
 
-    await service.cancelTask('ENG-RETRY-101');
+    await service.cancelTask(retryTaskId);
   });
 
   // ==========================================================

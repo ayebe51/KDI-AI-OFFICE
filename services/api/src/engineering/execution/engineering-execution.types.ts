@@ -7,15 +7,23 @@ export type EngineeringExecutionStatus =
   // Lifecycle states (§6)
   | 'TASK_CREATED'
   | 'TASK_ASSIGNED'
+  | 'QUEUED'
+  | 'WAITING_FOR_RESOURCES'
+  | 'WORKSPACE_PREPARING'
   | 'WORKSPACE_PREPARED'
   | 'REPOSITORY_INSPECTED'
+  | 'EXECUTOR_STARTING'
   | 'EXECUTOR_STARTED'
+  | 'EXECUTING'
   | 'IMPLEMENTING'
   | 'TESTING'
+  | 'REPAIRING'
   | 'DIFF_COLLECTED'
+  | 'REVIEWING'
   | 'ENGINEERING_REVIEW'
   | 'READY_FOR_APPROVAL'
   | 'APPROVED'
+  | 'APPROVAL_INVALIDATED'
   | 'COMMITTED'
   | 'MERGED'
   | 'READY_FOR_DEPLOY'
@@ -27,10 +35,14 @@ export type EngineeringExecutionStatus =
   | 'ANTIGRAVITY_UNAVAILABLE'
   | 'ANTIGRAVITY_AUTH_REQUIRED'
   | 'ANTIGRAVITY_PERMISSION_BLOCKED'
-  // Failure / Terminal states (§6)
+  // Failure / Terminal / Recovery states (§6)
   | 'EXECUTOR_UNAVAILABLE'
+  | 'AUTH_REQUIRED'
+  | 'PERMISSION_BLOCKED'
   | 'WORKSPACE_ERROR'
+  | 'TIMEOUT'
   | 'EXECUTION_TIMEOUT'
+  | 'EXECUTION_FAILED'
   | 'COMMAND_FAILED'
   | 'TEST_FAILED'
   | 'REVIEW_FAILED'
@@ -38,7 +50,11 @@ export type EngineeringExecutionStatus =
   | 'MERGE_FAILED'
   | 'DEPLOY_FAILED'
   | 'BLOCKED'
-  | 'CANCELLED';
+  | 'CANCEL_REQUESTED'
+  | 'CANCELLED'
+  | 'CANCEL_TIMEOUT'
+  | 'RECOVERY_REQUIRED'
+  | 'STALE';
 
 export type CommandSecurityCategory = 'SAFE' | 'RESTRICTED' | 'DANGEROUS' | 'FORBIDDEN';
 
@@ -140,6 +156,7 @@ export interface ExecutionAttempt {
   exitCode?: number;
   changedFiles: string[];
   diffSummary: string;
+  diffHash?: string;
   tests: {
     run: number;
     passed: number;
@@ -184,6 +201,7 @@ export interface EngineeringExecutionResult {
   exitCode?: number;
   changedFiles: string[];
   diffSummary: string;
+  diffHash?: string;
   tests: {
     run: number;
     passed: number;

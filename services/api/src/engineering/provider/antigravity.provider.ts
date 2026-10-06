@@ -117,6 +117,11 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
     );
 
     this.activeWorkspaces.set(sessionId, workspace);
+    if (request.executionId) {
+      this.activeWorkspaces.set(request.executionId, workspace);
+      this.activeWorkspaces.set(`sess_${request.executionId}`, workspace);
+    }
+    this.activeWorkspaces.set(request.taskId, workspace);
 
     const session: EngineeringSession = {
       sessionId,
@@ -159,7 +164,10 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
     );
 
     // 1. Ensure isolated workspace exists
-    let workspace = this.activeWorkspaces.get(sessionId);
+    let workspace =
+      this.activeWorkspaces.get(sessionId) ||
+      (context.executionId ? this.activeWorkspaces.get(context.executionId) : undefined) ||
+      this.activeWorkspaces.get(task.taskId);
     if (!workspace) {
       workspace = await this.workspaceManager.allocateWorkspace(
         task.taskId,

@@ -324,8 +324,57 @@ export class OrchestratorService {
   ): Promise<OrchestratorResult> {
     const trimmed = args.trim();
 
+    // ── Phase 17: Portfolio, Prioritization & Workforce Management Subcommands ──
+    if (trimmed.startsWith('portfolio')) {
+      const text = this.engineeringService?.managerService?.getPortfolioTelegramStatus() ||
+        'Portfolio service belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('prioritize') || trimmed.startsWith('reorder')) {
+      const text = this.engineeringService?.managerService?.answerManagerQuery('prioritaskan semua pekerjaan') ||
+        'Prioritization engine belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('brief')) {
+      const text = this.engineeringService?.managerService?.formatDailyBriefTelegramMessage() ||
+        'Daily Brief engine belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('blockers') || trimmed.startsWith('blocked')) {
+      const text = this.engineeringService?.managerService?.answerManagerQuery('task mana yang blocked?') ||
+        'Blocker detection belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('workload') || trimmed.startsWith('workforce')) {
+      const text = this.engineeringService?.managerService?.answerManagerQuery('siapa yang sedang sibuk?') ||
+        'Workload manager belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('run-top')) {
+      const text = this.engineeringService?.managerService?.answerManagerQuery('kerjakan yang paling penting dulu') ||
+        'Queue runner belum aktif.';
+      return { type: 'TASK_CREATED', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('benchmark-report') || trimmed.startsWith('benchmark') || trimmed.startsWith('autonomy')) {
+      const text = this.engineeringService?.managerService?.generateBenchmarkExitReport() ||
+        'Benchmark service belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('reliability') || trimmed.startsWith('phase19') || trimmed.startsWith('comparison')) {
+      const text = this.engineeringService?.managerService?.generatePhase19ComparisonReport() ||
+        'Reliability service belum aktif.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
     // ── 1. Subcommand: status [taskId] ──────────────────────────
-    if (trimmed.startsWith('status')) {
+    if (trimmed.startsWith('status') || trimmed === '') {
       const subArg = trimmed.replace(/^status\s*/i, '').trim();
       if (subArg) {
         const task = this.engineeringService?.executorService?.getTaskStatus(subArg);
@@ -340,7 +389,16 @@ export class OrchestratorService {
         };
       }
 
-      // Overview of all tasks
+      // Overview of all tasks and control plane (§28)
+      if (this.engineeringService?.executorService?.controlPlane) {
+        const controlSummary = await this.engineeringService.executorService.controlPlane.formatTelegramControlSummary();
+        return {
+          type: 'SYSTEM_STATE',
+          responseMessage: controlSummary,
+          correlationId,
+        };
+      }
+
       const tasks = this.engineeringService?.executorService?.listTasks() || [];
       if (tasks.length === 0) {
         return {
@@ -401,7 +459,98 @@ export class OrchestratorService {
         return { type: 'TASK_CREATED', responseMessage: summary, correlationId, taskId: result.taskId };
       }
 
+      // Phase 16: Process inbound work request through Engineering OS (§5 & §17)
+      if (this.engineeringService?.osService && this.engineeringService.executorService) {
+        const { workRequest, executionResult, formattedMessage } =
+          await this.engineeringService.osService.processInboundRequest(
+            subArg,
+            message.senderFirstName || 'Owner',
+            this.engineeringService.executorService
+          );
+        return {
+          type: workRequest.status === 'WAITING_FOR_APPROVAL' ? 'APPROVAL_REQUIRED' : 'TASK_CREATED',
+          responseMessage: formattedMessage,
+          correlationId,
+          taskId: executionResult?.taskId || workRequest.taskId || workRequest.id,
+        };
+      }
+
       return this.handleNaturalLanguage(subArg, message, correlationId);
+    }
+
+    // ── 3. Subcommand: attention (§16) ──────────────────────────
+    if (trimmed === 'attention' || trimmed === 'what-needs-my-attention') {
+      const pendingCount = this.engineeringService?.listPendingApprovals().length || 0;
+      const summary = this.engineeringService?.osService?.getAttentionSummary(pendingCount);
+      const text = summary
+        ? this.engineeringService!.osService.formatAttentionTelegramMessage(summary)
+        : 'Tidak ada perhatian khusus yang dibutuhkan saat ini.';
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // ── 4. Subcommand: health (§31) ─────────────────────────────
+    if (trimmed === 'health') {
+      const tasks = this.engineeringService?.executorService?.listTasks() || [];
+      const activeCount = tasks.filter((t) => !['COMMITTED', 'READY_FOR_DEPLOY', 'CANCELLED'].includes(t.status) && !t.status.includes('FAIL')).length;
+      const failedCount = tasks.filter((t) => t.status.includes('FAIL')).length;
+      const approvalCount = this.engineeringService?.listPendingApprovals().length || 0;
+      const queuedCount = this.engineeringService?.executorService?.controlPlane ? this.engineeringService.executorService.controlPlane.queue.getQueuedCount() : 0;
+      const report = this.engineeringService?.osService?.getHealthReport(activeCount, queuedCount, failedCount, approvalCount);
+      const text =
+        `🏥 *KDI ENGINEERING HEALTH REPORT*\n\n` +
+        `*Status:* *${report?.status || 'HEALTHY'}*\n` +
+        `*Active In-Flight:* ${activeCount}\n` +
+        `*Queued Tasks:* ${queuedCount}\n` +
+        `*Failed Tasks:* ${failedCount}\n` +
+        `*Pending Approvals:* ${approvalCount}\n\n` +
+        `*Briefing:*\n_${report?.briefing || 'All systems green.'}_`;
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // ── 5. Subcommand: analytics (§30) ──────────────────────────
+    if (trimmed === 'analytics' || trimmed === 'metrics') {
+      const analytics = this.engineeringService?.osService?.getAnalytics();
+      const text =
+        `📊 *ENGINEERING ANALYTICS & TELEMETRY*\n\n` +
+        `*Tasks Completed:* ${analytics?.tasksCompleted || 0}\n` +
+        `*Success Rate:* ${analytics?.taskSuccessRate || 100}%\n` +
+        `*Avg Attempts:* ${analytics?.averageAttempts || 1}\n` +
+        `*Test Failure Rate:* ${analytics?.testFailureRate || 0}%\n` +
+        `*Avg Duration:* ${analytics?.averageExecutionTimeMs || 0} ms\n` +
+        `*Antigravity Executions:* ${analytics?.antigravityExecutionsCount || 0}\n\n` +
+        `*Token Observability:*\n` +
+        `• Requests: ${analytics?.tokenMetrics.totalRequests || 0}\n` +
+        `• Total Tokens: ${(analytics?.tokenMetrics.promptTokens || 0) + (analytics?.tokenMetrics.completionTokens || 0)}\n` +
+        `• Cache Hits: ${analytics?.tokenMetrics.cacheHits || 0} / Misses: ${analytics?.tokenMetrics.cacheMisses || 0}\n` +
+        `• Est. Cost: $${analytics?.tokenMetrics.estimatedCostUsd || '0.0000'} USD`;
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // ── 6. Subcommand: projects (§6 & §26) ──────────────────────
+    if (trimmed.startsWith('projects') || trimmed.startsWith('project')) {
+      const subArg = trimmed.replace(/^projects?\s*/i, '').trim();
+      if (subArg) {
+        const p = this.engineeringService?.osService?.projectKnowledge.resolveProject(subArg);
+        if (p) {
+          const text =
+            `🏛️ *PROJECT PROFILE — ${p.name.toUpperCase()}*\n\n` +
+            `*Slug:* \`${p.slug}\`\n` +
+            `*Framework:* ${p.framework}\n` +
+            `*Language:* ${p.language}\n` +
+            `*Test Command:* \`${p.testCommand}\`\n` +
+            `*Lead Agent:* ${p.assignedLeadAgent}\n` +
+            `*Repository:* \`${p.repositoryPath}\`\n\n` +
+            `*Constraints:*\n${p.knownConstraints.map((c) => `• ${c}`).join('\n')}\n\n` +
+            `*Architecture Notes:*\n_${p.architectureNotes}_`;
+          return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+        }
+      }
+      const projects = this.engineeringService?.osService?.projectKnowledge.listProjects() || [];
+      const text =
+        `🏛️ *REGISTERED KDI PROJECTS (${projects.length})*\n\n` +
+        projects.map((p) => `• *${p.name}* (\`${p.slug}\`) — ${p.framework} [Lead: ${p.assignedLeadAgent}]`).join('\n') +
+        `\n\n_Ketik \`/engineering project <slug>\` untuk melihat detail context._`;
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
     }
 
     // ── 3. Subcommand: review <taskId> ──────────────────────────
@@ -525,6 +674,87 @@ export class OrchestratorService {
       };
     }
 
+    // ── 6. Subcommand: retry <taskId> (§30) ──────────────────────
+    if (trimmed.startsWith('retry')) {
+      const subArg = trimmed.replace(/^retry\s*/i, '').trim();
+      if (!subArg) {
+        return {
+          type: 'TEXT',
+          responseMessage: `Sertakan task ID yang ingin di-retry. Contoh:\n\`/engineering retry ENG-123\``,
+          correlationId,
+        };
+      }
+      try {
+        const sender = message.senderFirstName || 'Owner';
+        const result = await this.engineeringService?.executorService?.retryTask(subArg, sender);
+        if (result) {
+          const summary = this.engineeringService!.executorService!.formatTelegramSummary(result);
+          return { type: 'TASK_CREATED', responseMessage: summary, correlationId, taskId: result.taskId };
+        }
+      } catch (err: any) {
+        return {
+          type: 'TEXT',
+          responseMessage: `⚠️ Gagal retry task \`${subArg}\`: ${err.message}`,
+          correlationId,
+        };
+      }
+    }
+
+    // ── 7. Subcommand: recover <taskId> (§16 & §30) ──────────────
+    if (trimmed.startsWith('recover')) {
+      const subArg = trimmed.replace(/^recover\s*/i, '').trim();
+      if (!subArg) {
+        return {
+          type: 'TEXT',
+          responseMessage: `Sertakan task ID yang ingin di-recover. Contoh:\n\`/engineering recover ENG-123\``,
+          correlationId,
+        };
+      }
+      try {
+        const result = await this.engineeringService?.executorService?.recoverTask(subArg, 'RETRY');
+        if (result) {
+          const summary = this.engineeringService!.executorService!.formatTelegramSummary(result);
+          return { type: 'TASK_CREATED', responseMessage: `🔄 *Task Recovered*\n\n${summary}`, correlationId, taskId: result.taskId };
+        }
+      } catch (err: any) {
+        return {
+          type: 'TEXT',
+          responseMessage: `⚠️ Gagal recover task \`${subArg}\`: ${err.message}`,
+          correlationId,
+        };
+      }
+    }
+
+    // ── 8. Subcommand: pause (§20) ──────────────────────────────
+    if (trimmed === 'pause') {
+      this.engineeringService?.executorService?.pauseQueue();
+      return {
+        type: 'SYSTEM_STATE',
+        responseMessage: `⏸️ *ENGINEERING QUEUE PAUSED*\n\nQueue execution dijeda. Task yang sedang berjalan akan diselesaikan, task baru akan menunggu di queue.`,
+        correlationId,
+      };
+    }
+
+    // ── 9. Subcommand: resume (§20) ─────────────────────────────
+    if (trimmed === 'resume') {
+      this.engineeringService?.executorService?.resumeQueue();
+      return {
+        type: 'SYSTEM_STATE',
+        responseMessage: `▶️ *ENGINEERING QUEUE RESUMED*\n\nQueue execution dilanjutkan kembali.`,
+        correlationId,
+      };
+    }
+
+    // ── 10. Subcommand: halt / kill (§19) ────────────────────────
+    if (trimmed === 'halt' || trimmed === 'emergency-halt') {
+      await this.engineeringService?.executorService?.emergencyHalt();
+      return {
+        type: 'SYSTEM_STATE',
+        responseMessage: `🛑 *EMERGENCY HALT EXECUTED*\n\nQueue dijeda dan seluruh proses engineering in-flight dihentikan.`,
+        correlationId,
+      };
+    }
+
     // ── 5. Default Overview ─────────────────────────────────────
     const pendingApprovals = this.engineeringService?.listPendingApprovals() || [];
     const approvalCount = pendingApprovals.length;
@@ -574,7 +804,24 @@ export class OrchestratorService {
   ): Promise<OrchestratorResult> {
     const trimmed = args.trim();
 
+    // Phase 18: Benchmark Exit Report & Autonomy Breakdown
+    if (
+      trimmed.includes('report') ||
+      trimmed.includes('laporan') ||
+      trimmed.includes('exit') ||
+      trimmed.includes('autonomy')
+    ) {
+      if (this.engineeringService?.managerService) {
+        const text = this.engineeringService.managerService.generateBenchmarkExitReport();
+        return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+      }
+    }
+
     if (!this.benchmarkService) {
+      if (this.engineeringService?.managerService) {
+        const text = this.engineeringService.managerService.generateBenchmarkExitReport();
+        return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+      }
       return {
         type: 'TEXT',
         responseMessage: `Layanan Autonomous Benchmark belum aktif atau sedang memuat.`,
@@ -895,6 +1142,396 @@ export class OrchestratorService {
         createdAt: new Date().toISOString(),
       });
       return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // ==========================================================
+    // PHASE 17 — AI ENGINEERING MANAGER & MULTI-PROJECT OPERATIONS NL (§30 & §45)
+    // ==========================================================
+
+    const isLegacyPhase12Check =
+      lower.includes('cari penyebab') ||
+      lower.includes('nomor dua') ||
+      lower.includes('nomor 2') ||
+      lower.includes('yang kedua') ||
+      lower.includes('kondisi project') ||
+      lower.includes('yang backend saja') ||
+      lower.includes('hanya backend');
+
+    // 1. "Prioritaskan semua pekerjaan" / "Prioritaskan yang paling penting" (§30)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('prioritaskan semua pekerjaan') ||
+       lower.includes('prioritaskan pekerjaan') ||
+       lower.includes('prioritaskan semua') ||
+       lower.includes('reorder queue'))
+    ) {
+      classification = 'CONTROL';
+      intent = 'Engineering Manager: Prioritize All Tasks';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 2. "Status seluruh project" / "portfolio status" (§31)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('status seluruh project') ||
+       lower.includes('status portfolio') ||
+       lower.includes('portfolio status') ||
+       lower.includes('semua project'))
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering Manager: Portfolio Status';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.getPortfolioTelegramStatus()
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 3. "Kenapa SIMMACI tertunda?" / "Kenapa <project> tertunda?" (§30)
+    if (
+      !isLegacyPhase12Check &&
+      lower.includes('kenapa') &&
+      (lower.includes('tertunda') || lower.includes('delay') || lower.includes('terhambat'))
+    ) {
+      classification = 'ANALYSIS';
+      intent = 'Engineering Manager: Project Delay Investigation';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'TEXT', responseMessage: text, correlationId };
+    }
+
+    // 4. "Task mana yang blocked?" (§30)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('task mana yang blocked') ||
+       lower.includes('pekerjaan mana yang blocked') ||
+       (lower.includes('mana yang blocked') && !lower.includes('cari')))
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering Manager: Blocked Tasks Query';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 5. "Siapa yang sedang sibuk?" (§30)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('siapa yang sedang sibuk') ||
+       lower.includes('siapa yang sibuk') ||
+       lower.includes('workload workforce') ||
+       lower.includes('kapasitas agent'))
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering Manager: Workforce Workload';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 6. "Kerjakan yang paling penting dulu" (§30 & §45)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('kerjakan yang paling penting') ||
+       lower.includes('prioritas tertinggi dulu') ||
+       lower.includes('eksekusi task teratas'))
+    ) {
+      classification = 'EXECUTION';
+      intent = 'Engineering Manager: Execute Top Priority Task';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'TASK_CREATED', responseMessage: text, correlationId };
+    }
+
+    // 7. Phase 19: "Bagaimana optimasi reliability" / "Reliability report" (§50)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('reliability') ||
+       lower.includes('optimasi engineering') ||
+       lower.includes('optimasi reliability') ||
+       lower.includes('perbandingan benchmark') ||
+       lower.includes('phase 19'))
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering Manager: Phase 19 Reliability Report';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.generatePhase19ComparisonReport()
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // ==========================================================
+    // PHASE 16 — KDI AI ENGINEERING OPERATING SYSTEM NL HANDLERS
+    // ==========================================================
+
+    // 1. "Apa yang butuh perhatian saya?" / "What needs my attention?" (§16)
+    if (
+      lower.includes('butuh perhatian') ||
+      lower.includes('memerlukan perhatian') ||
+      lower.includes('perlu perhatian') ||
+      lower.includes('needs my attention') ||
+      lower.includes('what needs attention')
+    ) {
+      classification = 'CONTROL';
+      intent = 'Engineering OS: What Needs My Attention';
+      const pendingCount = this.engineeringService?.listPendingApprovals().length || 0;
+      const summary = this.engineeringService?.osService?.getAttentionSummary(pendingCount);
+      const text = summary
+        ? this.engineeringService!.osService.formatAttentionTelegramMessage(summary)
+        : 'Semua pekerjaan engineering berjalan lancar tanpa blocker.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 2. "Status pekerjaan SIMMACI" / "Status SIMMACI" (§6)
+    if (
+      (lower.includes('status') && lower.includes('simmaci')) ||
+      lower.includes('status pekerjaan simmaci') ||
+      lower.includes('progres simmaci')
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering OS: Project Status SIMMACI';
+      const p = this.engineeringService?.osService?.projectKnowledge.resolveProject('simmaci');
+      const tasks = this.engineeringService?.executorService?.listTasks().filter((t) => t.project.toLowerCase().includes('simmaci')) || [];
+      const taskSummary = tasks.length > 0
+        ? tasks.slice(-3).map((t) => `• \`${t.taskId}\`: *${t.status}* [${t.branch}]`).join('\n')
+        : '• Belum ada task aktif untuk SIMMACI.';
+      const text =
+        `🏛️ *STATUS PROJECT SIMMACI*\n\n` +
+        `*Framework:* ${p?.framework || 'Node.js'}\n` +
+        `*Lead Agent:* ${p?.assignedLeadAgent || 'Farhan Hakim (BE Engineer)'}\n` +
+        `*Test Suite:* \`${p?.testCommand || 'node --test'}\`\n` +
+        `*Active Tasks:*\n${taskSummary}\n\n` +
+        `_Gunakan Telegram untuk memberikan pekerjaan, contoh:_\n` +
+        `_"SIMMACI login error"_`;
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 3. "Apa yang sedang dikerjakan BE?" / "status be engineer" (§7)
+    if (
+      lower.includes('sedang dikerjakan be') ||
+      lower.includes('apa yang dikerjakan be') ||
+      lower.includes('aktivitas be engineer') ||
+      lower.includes('pekerjaan be engineer')
+    ) {
+      classification = 'INFORMATION';
+      intent = 'Engineering OS: Agent Activity BE Engineer';
+      const beTasks = this.engineeringService?.executorService?.listTasks().filter((t) => (t as any).agent?.toLowerCase().includes('be') || t.taskId.toLowerCase().includes('be') || t.project.toLowerCase().includes('simmaci')) || [];
+      const activeTask = beTasks.find((t) => !['COMMITTED', 'READY_FOR_DEPLOY', 'CANCELLED'].includes(t.status) && !t.status.includes('FAIL'));
+      let text = '';
+      if (activeTask) {
+        text =
+          `👨‍💻 *BE ENGINEER (Farhan Hakim)*\n\n` +
+          `*Status:* WORKING ON TASK\n` +
+          `*Task:* \`${activeTask.taskId}\` [${activeTask.project}]\n` +
+          `*State:* *${activeTask.status}*\n` +
+          `*Branch:* \`${activeTask.branch}\``;
+      } else {
+        text =
+          `👨‍💻 *BE ENGINEER (Farhan Hakim)*\n\n` +
+          `*Status:* AVAILABLE (IDLE)\n` +
+          `*Preferred Executor:* Antigravity\n` +
+          `*Scope:* Backend API, authentication, database, tests\n` +
+          `Siap menerima penugasan baru.`;
+      }
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 4. "Kenapa task <taskId> gagal?" (§21)
+    if (
+      (lower.includes('kenapa task') || lower.includes('mengapa task') || lower.includes('alasan task')) &&
+      lower.includes('gagal')
+    ) {
+      classification = 'ANALYSIS';
+      intent = 'Engineering OS: Task Failure Diagnostic';
+      const taskIdMatch = rawText.match(/ENG-[A-Za-z0-9-_]+/i);
+      const targetId = taskIdMatch ? taskIdMatch[0] : '';
+      const task = targetId ? this.engineeringService?.executorService?.getTaskStatus(targetId) : undefined;
+      let text = '';
+      if (task) {
+        const lastAttempt = task.currentAttempt;
+        text =
+          `🔍 *TASK FAILURE DIAGNOSTIC — \`${task.taskId}\`*\n\n` +
+          `*Project:* ${task.project}\n` +
+          `*Status:* *${task.status}*\n` +
+          `*Attempts:* ${task.attempts.length}\n` +
+          `*Error / Reason:*\n_${lastAttempt?.error || task.error || 'Test suite assertions failed'}_\n\n` +
+          `*Tests:* ${lastAttempt?.tests.failed || 0} failed out of ${lastAttempt?.tests.run || 0} tests\n` +
+          `*Next Recommended Action:*\nKetik \`/engineering retry ${task.taskId}\` atau investigasi perbaikan manual.`;
+      } else {
+        text = `Sertakan task ID yang valid (misal: \`ENG-104\`) untuk memeriksa diagnosa kegagalan.`;
+      }
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'TEXT', responseMessage: text, correlationId };
+    }
+
+    // 5. Inbound Real Engineering Work Request via Natural Language (§2, §4, §17, §45)
+    // Matches: "SIMMACI login error", "SIMMACI setelah update kemarin login kadang 500",
+    // "Perbaiki login SIMMACI", "SIMMACI error login", "Perbaiki bug di calculator",
+    const isLegacyPhase12Query =
+      lower.includes('cari penyebab') ||
+      lower.includes('nomor dua') ||
+      lower.includes('nomor 2') ||
+      lower.includes('yang kedua') ||
+      lower.includes('kondisi project') ||
+      lower.includes('yang backend saja') ||
+      lower.includes('hanya backend');
+
+    if (
+      !isLegacyPhase12Query &&
+      ((lower.includes('simmaci') && (lower.includes('error') || lower.includes('login') || lower.includes('500') || lower.includes('bug') || lower.includes('perbaiki') || lower.includes('tambah') || lower.includes('endpoint') || lower.includes('test'))) ||
+      (lower.includes('calc') && (lower.includes('error') || lower.includes('bug') || lower.includes('perbaiki') || lower.includes('bagi') || lower.includes('divide') || lower.includes('persen'))) ||
+      lower.startsWith('perbaiki ') ||
+      lower.startsWith('fix ') ||
+      lower.startsWith('buat regression test') ||
+      lower.startsWith('tambahkan endpoint'))
+    ) {
+      classification = 'EXECUTION';
+      intent = 'Engineering OS: Real Inbound Engineering Work Request';
+
+      this.update3DAgentActivity('BACKEND_ENGINEER', 'CODING', 'RM-05', `Executing engineering task: ${rawText.slice(0, 50)}`);
+
+      if (this.engineeringService?.osService && this.engineeringService.executorService) {
+        const { workRequest, executionResult, formattedMessage } =
+          await this.engineeringService.osService.processInboundRequest(
+            rawText,
+            senderName,
+            this.engineeringService.executorService
+          );
+
+        await this.repository.saveCommand({
+          commandId: cmdId,
+          conversationId: message.conversationId,
+          correlationId,
+          rawInput: rawText,
+          classification,
+          intent,
+          taskId: executionResult?.taskId || workRequest.taskId || workRequest.id,
+          executionStatus: workRequest.status,
+          createdAt: new Date().toISOString(),
+        });
+
+        return {
+          type: workRequest.status === 'WAITING_FOR_APPROVAL' ? 'APPROVAL_REQUIRED' : 'TASK_CREATED',
+          responseMessage: formattedMessage,
+          correlationId,
+          taskId: executionResult?.taskId || workRequest.taskId || workRequest.id,
+        };
+      }
     }
 
     // ==========================================================
