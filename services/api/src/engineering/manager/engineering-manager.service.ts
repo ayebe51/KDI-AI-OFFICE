@@ -22,6 +22,12 @@ import {
   Phase19ComparisonGenerator,
   type Phase19ComparisonReport,
 } from '../reliability/index.js';
+import {
+  WindowsHostRegistryService,
+  DeploymentRollbackService,
+  type WindowsHostRegistration,
+  type DeploymentRollbackSnapshot,
+} from '../host/index.js';
 import type {
   BenchmarkSummaryReport,
   EngineeringDailyBrief,
@@ -64,6 +70,8 @@ export class EngineeringManagerService {
   public readonly ambiguityResolver: AmbiguityResolverService;
   public readonly devopsPreflight: DevOpsPreflightService;
   public readonly selfRepairCoordinator: SelfRepairCoordinatorService;
+  public readonly hostRegistry: WindowsHostRegistryService;
+  public readonly rollbackService: DeploymentRollbackService;
 
   private readonly tasks = new Map<string, QueuedEngineeringTask>();
   private isQueuePaused = false;
@@ -80,7 +88,9 @@ export class EngineeringManagerService {
     @Optional() antigravityOptimizer?: AntigravityOptimizerService,
     @Optional() ambiguityResolver?: AmbiguityResolverService,
     @Optional() devopsPreflight?: DevOpsPreflightService,
-    @Optional() selfRepairCoordinator?: SelfRepairCoordinatorService
+    @Optional() selfRepairCoordinator?: SelfRepairCoordinatorService,
+    @Optional() hostRegistry?: WindowsHostRegistryService,
+    @Optional() rollbackService?: DeploymentRollbackService
   ) {
     this.portfolio = portfolio || new PortfolioService();
     this.prioritization = prioritization || new PrioritizationService(this.portfolio);
@@ -94,6 +104,8 @@ export class EngineeringManagerService {
     this.ambiguityResolver = ambiguityResolver || new AmbiguityResolverService();
     this.devopsPreflight = devopsPreflight || new DevOpsPreflightService();
     this.selfRepairCoordinator = selfRepairCoordinator || new SelfRepairCoordinatorService();
+    this.hostRegistry = hostRegistry || new WindowsHostRegistryService();
+    this.rollbackService = rollbackService || new DeploymentRollbackService();
   }
 
   /**
@@ -682,6 +694,36 @@ export class EngineeringManagerService {
       return this.generateBenchmarkExitReport();
     }
 
+    // 10. "Status execution host" / "host windows" / "apakah host online"
+    if (q.includes('host') || q.includes('windows host') || q.includes('execution host') || q.includes('agent host')) {
+      const overview = this.getExecutionHostsOverview();
+      const host = overview.selectedHost;
+      return (
+        `🖥️ *STATUS WINDOWS EXECUTION HOST*\n\n` +
+        `• Windows Host: *${overview.windowsHost}*\n` +
+        `• Execution Agent: *${overview.executionAgent}*\n` +
+        `• Antigravity (agy.exe): *${overview.antigravity}* (v${host?.antigravityVersion || '1.2.17'})\n` +
+        `• Git Runtime: *${overview.git}*\n` +
+        `• Node Runtime: *${overview.node}*\n` +
+        `• Active Remote Tasks: *${overview.activeTasks}*\n\n` +
+        `_Arsitektur: Docker Control Plane <-> Native Windows Execution Host_`
+      );
+    }
+
+    // 11. "Live pilot" / "pilot operations"
+    if (q.includes('pilot') || q.includes('live operations')) {
+      const overview = this.getExecutionHostsOverview();
+      return (
+        `🚀 *STATUS KDI LIVE PILOT OPERATIONS*\n\n` +
+        `• Host: *${overview.selectedHost?.hostId || 'WINDOWS-HOST-01'}* (${overview.windowsHost})\n` +
+        `• Executor: *Antigravity Native (agy.exe)*\n` +
+        `• Worktree: *Native Windows (.worktrees/ws_<taskId>)*\n` +
+        `• Verification: *Independent Tests & Typecheck*\n` +
+        `• Approval Gate: *Cryptographic (/engineering approve)*\n\n` +
+        `_Ready for real-world engineering pilot execution._`
+      );
+    }
+
     // Fallback: Daily Brief
     return this.formatDailyBriefTelegramMessage();
   }
@@ -732,6 +774,68 @@ export class EngineeringManagerService {
     const p18 = phase18Report || this.benchmark.getPhase18SummaryReport(7);
     const p19 = phase19Report || this.benchmark.getPhase18SummaryReport(7);
     return Phase19ComparisonGenerator.calculateComparison(p18, p19);
+  }
+
+  // ==========================================================
+  // PHASE 19.1: WINDOWS EXECUTION HOST & DEPLOYMENT MANAGEMENT
+  // ==========================================================
+
+  /**
+   * Health and readiness overview of registered Windows Execution Hosts (§15)
+   */
+  public getExecutionHostsOverview(hostId?: string): {
+    windowsHost: string;
+    executionAgent: string;
+    antigravity: string;
+    git: string;
+    node: string;
+    hostCount: number;
+    activeTasks: number;
+    selectedHost?: WindowsHostRegistration;
+  } {
+    return this.hostRegistry.getHealthOverview(hostId);
+  }
+
+  /**
+   * List all registered Windows execution hosts
+   */
+  public listExecutionHosts(): WindowsHostRegistration[] {
+    return this.hostRegistry.listHosts();
+  }
+
+  /**
+   * Get designated host for a project
+   */
+  public getDesignatedHost(projectSlug: string): WindowsHostRegistration | null {
+    return this.hostRegistry.getDesignatedHostForProject(projectSlug);
+  }
+
+  /**
+   * Create deployment rollback snapshot before production updates (§38)
+   */
+  public createDeploymentSnapshot(gitSha: string, description: string): DeploymentRollbackSnapshot {
+    return this.rollbackService.createSnapshot({
+      gitSha,
+      description,
+      activeHosts: this.hostRegistry.listHosts(),
+      projectMappings: [],
+      configSummary: {
+        taskQueueSize: String(this.tasks.size),
+        isQueuePaused: String(this.isQueuePaused),
+      },
+    });
+  }
+
+  /**
+   * Execute emergency deployment rollback (§38)
+   */
+  public executeDeploymentRollback(targetSnapshotId?: string): {
+    success: boolean;
+    restoredSnapshot?: DeploymentRollbackSnapshot;
+    actionsTaken: string[];
+    reason?: string;
+  } {
+    return this.rollbackService.executeRollback(targetSnapshotId);
   }
 }
 

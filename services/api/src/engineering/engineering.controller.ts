@@ -153,5 +153,42 @@ export class EngineeringController {
       projects: this.engineeringService.osService.projectKnowledge.listProjects(),
     };
   }
+
+  // ==========================================================
+  // PHASE 19.1: WINDOWS EXECUTION HOSTS & ROLLBACK ENDPOINTS
+  // ==========================================================
+
+  @Get('hosts')
+  listHosts() {
+    return {
+      status: 'SUCCESS',
+      hosts: this.engineeringService.managerService.listExecutionHosts(),
+    };
+  }
+
+  @Get('hosts/health')
+  getHostHealth(@Query('hostId') hostId?: string) {
+    return {
+      status: 'SUCCESS',
+      health: this.engineeringService.managerService.getExecutionHostsOverview(hostId),
+    };
+  }
+
+  @Get('snapshots')
+  listSnapshots() {
+    return {
+      status: 'SUCCESS',
+      snapshots: this.engineeringService.managerService.rollbackService.listSnapshots(),
+    };
+  }
+
+  @Post('rollback')
+  executeRollback(@Body() body: { snapshotId?: string }) {
+    const result = this.engineeringService.managerService.executeDeploymentRollback(body?.snapshotId);
+    return {
+      status: result.success ? 'SUCCESS' : 'FAILED',
+      ...result,
+    };
+  }
 }
 

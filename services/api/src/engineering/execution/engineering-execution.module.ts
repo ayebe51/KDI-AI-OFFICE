@@ -20,6 +20,13 @@ import { ControlPlanePersistenceService } from '../control-plane/control-plane-p
 import { EngineeringQueueService } from '../control-plane/queue.service.js';
 import { WorktreeLeaseService } from '../control-plane/worktree-lease.service.js';
 import { RecoveryService } from '../control-plane/recovery.service.js';
+import {
+  WindowsHostRegistryService,
+  RepositoryAllowlistService,
+  RemoteExecutionChannelService,
+  WindowsHostExecutorAdapter,
+  DeploymentRollbackService,
+} from '../host/index.js';
 
 @Module({
   providers: [
@@ -37,6 +44,11 @@ import { RecoveryService } from '../control-plane/recovery.service.js';
     WorktreeLeaseService,
     RecoveryService,
     ControlPlaneService,
+    WindowsHostRegistryService,
+    RepositoryAllowlistService,
+    RemoteExecutionChannelService,
+    WindowsHostExecutorAdapter,
+    DeploymentRollbackService,
     EngineeringExecutorService,
   ],
   exports: [
@@ -55,6 +67,11 @@ import { RecoveryService } from '../control-plane/recovery.service.js';
     EngineeringQueueService,
     WorktreeLeaseService,
     RecoveryService,
+    WindowsHostRegistryService,
+    RepositoryAllowlistService,
+    RemoteExecutionChannelService,
+    WindowsHostExecutorAdapter,
+    DeploymentRollbackService,
   ],
 })
 export class EngineeringExecutionModule {}

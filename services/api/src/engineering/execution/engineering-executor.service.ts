@@ -14,6 +14,7 @@ import { EngineeringCodingWorker } from './coding-worker.service.js';
 import { EngineeringAgentService } from './engineering-agent.service.js';
 import { ControlPlaneService } from '../control-plane/control-plane.service.js';
 import { EngineeringStateMachine, IllegalStateTransitionError } from '../control-plane/state-machine.js';
+import { WindowsHostExecutorAdapter } from '../host/windows-host-executor.adapter.js';
 import type {
   EngineeringExecutor,
   TestRunResult,
@@ -67,10 +68,12 @@ export class EngineeringExecutorService {
     const gitWorkspace = new GitWorkspaceAdapter();
     const antigravity = new AntigravityExecutorAdapter(gitWorkspace);
     const codingWorkerAdapter = new CodingWorkerAdapter(gitWorkspace, this.codingWorker);
+    const windowsHostAdapter = new WindowsHostExecutorAdapter();
 
     this.executors.set('ANTIGRAVITY', antigravity);
     this.executors.set('GIT_WORKTREE', codingWorkerAdapter);
     this.executors.set('CODING_WORKER', codingWorkerAdapter);
+    this.executors.set('WINDOWS_ANTIGRAVITY_HOST', windowsHostAdapter);
 
     // Hydrate in-memory state from persistent storage (§4 & §14)
     this.hydrateFromPersistence();

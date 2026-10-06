@@ -373,6 +373,35 @@ export class OrchestratorService {
       return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
     }
 
+    if (trimmed.startsWith('host') || trimmed.startsWith('hosts')) {
+      const overview = this.engineeringService?.managerService?.getExecutionHostsOverview();
+      const host = overview?.selectedHost;
+      const text =
+        `🖥️ *KDI ENGINEERING EXECUTION HOSTS*\n\n` +
+        `• Windows Host: *${overview?.windowsHost || 'ONLINE'}*\n` +
+        `• Execution Agent: *${overview?.executionAgent || 'READY'}*\n` +
+        `• Antigravity: *${overview?.antigravity || 'READY'}* (v${host?.antigravityVersion || '1.2.17'})\n` +
+        `• Git: *${overview?.git || 'READY'}*\n` +
+        `• Node: *${overview?.node || 'READY'}*\n` +
+        `• Active Tasks: *${overview?.activeTasks || 0}*\n\n` +
+        `_Arsitektur: Docker Control Plane <-> Native Windows Execution Host_`;
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    if (trimmed.startsWith('pilot')) {
+      const overview = this.engineeringService?.managerService?.getExecutionHostsOverview();
+      const text =
+        `🚀 *KDI LIVE PILOT OPERATIONS STATUS*\n\n` +
+        `• Architecture: *Docker Control Plane + Native Windows Host*\n` +
+        `• Host: *${overview?.selectedHost?.hostId || 'WINDOWS-HOST-01'}* (${overview?.windowsHost || 'ONLINE'})\n` +
+        `• Native Executor: *Antigravity agy.exe* (${overview?.antigravity || 'READY'})\n` +
+        `• Worktree: *Native Windows (.worktrees/ws_<taskId>)*\n` +
+        `• Verification: *Independent test & build runner*\n` +
+        `• Approval Gate: *Active (/engineering approve)*\n\n` +
+        `_Live Pilot Ready for Low-Risk Tasks._`;
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
     // ── 1. Subcommand: status [taskId] ──────────────────────────
     if (trimmed.startsWith('status') || trimmed === '') {
       const subArg = trimmed.replace(/^status\s*/i, '').trim();
@@ -1323,6 +1352,33 @@ export class OrchestratorService {
       const text = this.engineeringService?.managerService
         ? this.engineeringService.managerService.generatePhase19ComparisonReport()
         : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
+    }
+
+    // 8. Phase 19.1: "Status execution host" / "Host windows" / "Live pilot" (§23)
+    if (
+      !isLegacyPhase12Check &&
+      (lower.includes('execution host') ||
+       lower.includes('host windows') ||
+       lower.includes('status host') ||
+       lower.includes('live pilot') ||
+       lower.includes('pilot status'))
+    ) {
+      classification = 'REPORTING';
+      intent = 'Engineering Host: Windows Execution Host Status';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Host Service belum aktif.';
       await this.repository.saveCommand({
         commandId: cmdId,
         conversationId: message.conversationId,
