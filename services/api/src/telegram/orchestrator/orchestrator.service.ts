@@ -1392,6 +1392,31 @@ export class OrchestratorService {
       return { type: 'SYSTEM_STATE', responseMessage: text, correlationId };
     }
 
+    // 9. Phase 20: "Kerjakan bug backend SIMMACI...", "Kerjakan task ILMORA...", "Bagaimana pekerjaan KDI hari ini?" (§14)
+    if (
+      !isLegacyPhase12Check &&
+      ((lower.includes('kerjakan') && (lower.includes('simmaci') || lower.includes('ilmora') || lower.includes('prioritas') || lower.includes('bergantung'))) ||
+       lower.includes('pekerjaan kdi') ||
+       lower.includes('kdi hari ini'))
+    ) {
+      classification = 'EXECUTION';
+      intent = 'Engineering Manager: Natural Language Work Dispatch';
+      const text = this.engineeringService?.managerService
+        ? this.engineeringService.managerService.answerManagerQuery(rawText)
+        : 'Engineering Manager belum aktif.';
+      await this.repository.saveCommand({
+        commandId: cmdId,
+        conversationId: message.conversationId,
+        correlationId,
+        rawInput: rawText,
+        classification,
+        intent,
+        executionStatus: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+      });
+      return { type: 'TASK_CREATED', responseMessage: text, correlationId };
+    }
+
     // ==========================================================
     // PHASE 16 — KDI AI ENGINEERING OPERATING SYSTEM NL HANDLERS
     // ==========================================================

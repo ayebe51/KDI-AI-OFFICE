@@ -190,5 +190,30 @@ export class EngineeringController {
       ...result,
     };
   }
+
+  // ==========================================================
+  // PHASE 20: LIVE OPERATIONS BENCHMARK ENDPOINTS
+  // ==========================================================
+
+  @Get('benchmark/phase20/catalog')
+  getPhase20Catalog() {
+    return {
+      status: 'SUCCESS',
+      totalTasks: 10,
+      distribution: { simmaci: 4, ilmora: 3, kdi: 3 },
+      tasks: [
+        { id: 'SIMMACI-P20-01', title: 'Fix student session token refresh persistence in AuthService', role: 'BACKEND', difficulty: 'EASY' },
+        { id: 'SIMMACI-P20-02', title: 'Add loading indicator and download notification to student attendance UI', role: 'FRONTEND', difficulty: 'MEDIUM' },
+        { id: 'SIMMACI-P20-03', title: 'Harden student attendance edge cases regression test suite', role: 'QA', difficulty: 'EASY' },
+        { id: 'SIMMACI-P20-04', title: 'Sanitize student profile API export against password and secret leakage', role: 'SECURITY', difficulty: 'HARD' },
+        { id: 'ILMORA-P20-01', title: 'RFC-4180 compliant CSV export for course enrollment & quiz results', role: 'BACKEND', difficulty: 'MEDIUM' },
+        { id: 'ILMORA-P20-02', title: 'Fix empty course category filter regression in user lookup', role: 'BACKEND', difficulty: 'EASY' },
+        { id: 'ILMORA-P20-03', title: 'Deterministic mock test runner for quiz score calculation', role: 'QA', difficulty: 'MEDIUM' },
+        { id: 'KDI-P20-01', title: 'Calculator division by zero and percentage calculation edge-case verification', role: 'BACKEND', difficulty: 'EASY' },
+        { id: 'KDI-P20-02', title: 'Docker Control Plane health check probe and host heartbeat reconciliation', role: 'DEVOPS', difficulty: 'HARD' },
+        { id: 'KDI-P20-03', title: 'Sanitize sensitive command arguments in human approval Telegram alerts', role: 'SECURITY', difficulty: 'MEDIUM' },
+      ],
+    };
+  }
 }
 

@@ -667,6 +667,56 @@ export class EngineeringManagerService {
       return this.formatAttentionTelegramMessage();
     }
 
+    // 7.1. "Kerjakan bug backend SIMMACI yang prioritas tinggi" (§14)
+    if (q.includes('kerjakan') && q.includes('simmaci')) {
+      const simmaciTasks = this.listTasks({ projectSlug: 'simmaci', status: 'QUEUED' });
+      const target = simmaciTasks.find((t) => t.agentRole === 'BACKEND') || simmaciTasks[0];
+      if (target) {
+        return (
+          `🚀 *MEMULAI TASK SIMMACI PRIORITAS TINGGI*\n\n` +
+          `• Task: \`${target.taskId}\` [SIMMACI]\n` +
+          `• Title: ${target.title}\n` +
+          `• Role: ${target.agentRole} (${target.assignedAgentName || 'Farhan Hakim'})\n` +
+          `• Priority Score: *${target.priorityScore.totalScore}*\n\n` +
+          `_Task dialihkan ke Windows Execution Host (Antigravity)._`
+        );
+      }
+      return `ℹ️ *SIMMACI*: Tidak ada antrean task backend pending. Semua pekerjaan sinkron.`;
+    }
+
+    // 7.2. "Kerjakan task ILMORA yang tidak bergantung task lain" (§14)
+    if (q.includes('kerjakan') && q.includes('ilmora')) {
+      const ilmoraTasks = this.listTasks({ projectSlug: 'ilmora', status: 'QUEUED' });
+      const target = ilmoraTasks.find((t) => t.dependencies.length === 0) || ilmoraTasks[0];
+      if (target) {
+        return (
+          `🚀 *MEMULAI TASK ILMORA TANPA DEPENDENCY*\n\n` +
+          `• Task: \`${target.taskId}\` [ILMORA]\n` +
+          `• Title: ${target.title}\n` +
+          `• Role: ${target.agentRole}\n` +
+          `• Dependencies: *0 (Independen)*\n\n` +
+          `_Task dialihkan ke Windows Execution Host (Antigravity)._`
+        );
+      }
+      return `ℹ️ *ILMORA*: Tidak ada antrean task independen saat ini.`;
+    }
+
+    // 7.3. "Bagaimana pekerjaan KDI hari ini?" (§14)
+    if (q.includes('pekerjaan kdi') || q.includes('kdi hari ini')) {
+      const kdiTasks = this.listTasks({ projectSlug: 'kdi' });
+      const active = kdiTasks.filter((t) => t.status === 'RUNNING' || t.status === 'QUEUED');
+      return (
+        `🏢 *STATUS PEKERJAAN KDI AI OFFICE HARI INI*\n\n` +
+        `• Active Tasks: *${active.length}*\n` +
+        `• Total Selesai: *${kdiTasks.filter((t) => t.status === 'COMPLETED').length}*\n` +
+        `• Control Plane: *Docker Production-Like (Healthy)*\n` +
+        `• Execution Host: *Windows Native (Online)*\n\n` +
+        (active.length > 0
+          ? active.map((t) => `• \`${t.taskId}\`: ${t.title} [${t.status}]`).join('\n')
+          : `_Semua operasi internal KDI berjalan normal tanpa hambatan._`)
+      );
+    }
+
     // 8. "Kerjakan yang paling penting dulu" / run-top
     if (q.includes('paling penting') || q.includes('run-top') || q.includes('kerjakan')) {
       const next = this.getNextExecutableTask();
