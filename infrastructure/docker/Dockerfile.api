@@ -35,6 +35,8 @@ COPY --from=builder /app/packages/ ./packages/
 COPY --from=builder /app/services/api/dist ./services/api/dist
 COPY --from=builder /app/node_modules ./node_modules
 
+RUN mkdir -p /app/backups /app/.worktrees && chown -R nestjs:nodejs /app
+
 USER nestjs
 EXPOSE 3000
 CMD ["node", "services/api/dist/main.js"]

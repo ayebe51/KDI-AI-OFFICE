@@ -1,0 +1,153 @@
+# ==========================================================
+# compose.local.yaml
+# KDI AI OFFICE — LOCAL DOCKER DEPLOYMENT SPECIFICATION (PHASE 30.10)
+# Target: Fully isolated local container deployment in WSL Docker Engine
+# All host ports bound strictly to 127.0.0.1 (Loopback Only)
+# ==========================================================
+
+name: kdi-local
+
+networks:
+  kdi-local-network:
+    name: kdi-local-network
+    driver: bridge
+
+volumes:
+  kdi_postgres_local_data:
+    name: kdi_postgres_local_data
+  kdi_redis_local_data:
+    name: kdi_redis_local_data
+  kdi_neo4j_local_data:
+    name: kdi_neo4j_local_data
+
+services:
+  # ==========================================
+  # 1. PostgreSQL 16 - Local Relational DB
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: kdi_postgres_local
+    restart: unless-stopped
+    networks:
+      - kdi-local-network
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kdi_ai_office_local}
+      POSTGRES_USER: ${POSTGRES_USER:-kdi_local_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kdi_local_secure_2026}
+    ports:
+      # Bound to 5433 on loopback to prevent collision with host 5432
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - kdi_postgres_local_data:/var/lib/postgresql/data
+      - ./infrastructure/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kdi_local_admin} -d ${POSTGRES_DB:-kdi_ai_office_local}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ==========================================
+  # 2. Redis 7 - Local Cache & Events
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: kdi_redis_local
+    restart: unless-stopped
+    networks:
+      - kdi-local-network
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-kdi_redis_local_2026}
+      --maxmemory 256mb
+      --maxmemory-policy noeviction
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - kdi_redis_local_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-kdi_redis_local_2026}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ==========================================
+  # 3. Neo4j 5 - Local Knowledge Graph
+  # ==========================================
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: kdi_neo4j_local
+    restart: unless-stopped
+    networks:
+      - kdi-local-network
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-kdi_neo4j_local_2026}
+      NEO4J_dbms_memory_heap_initial__size: 256m
+      NEO4J_dbms_memory_heap_max__size: 512m
+      NEO4J_dbms_memory_pagecache_size: 256m
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - kdi_neo4j_local_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ==========================================
+  # 4. KDI Control Plane API Service
+  # ==========================================
+  api:
+    image: kdi-api:local-p30-10
+    container_name: kdi_api_local
+    restart: unless-stopped
+    networks:
+      - kdi-local-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      API_URL: http://127.0.0.1:3000
+      WS_URL: ws://127.0.0.1:3000
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      JWT_SECRET: ${JWT_SECRET:-kdi_jwt_secret_local_p30_10_min32chars}
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-kdi_local_admin}:${POSTGRES_PASSWORD:-kdi_local_secure_2026}@postgres:5432/${POSTGRES_DB:-kdi_ai_office_local}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-kdi_redis_local_2026}@redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-kdi_neo4j_local_2026}
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 5. KDI Living Office Web Dashboard
+  # ==========================================
+  web:
+    image: kdi-web:local-p30-10
+    container_name: kdi_web_local
+    restart: unless-stopped
+    networks:
+      - kdi-local-network
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5173:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

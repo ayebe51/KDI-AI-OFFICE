@@ -14,8 +14,13 @@
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test --workspaces",
     "validate:prod": "node infrastructure/scripts/production-readiness-check.mjs",
+    "preflight:readiness": "node infrastructure/scripts/preflight-readiness.mjs",
     "dev:api": "npm run start:dev --workspace=services/api",
-    "dev:web": "npm run dev --workspace=apps/web"
+    "dev:web": "npm run dev --workspace=apps/web",
+    "docker:up": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml --env-file .env.local up -d\"",
+    "docker:down": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml down\"",
+    "docker:ps": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml ps\"",
+    "docker:logs": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml logs -f\""
   },
   "devDependencies": {
     "typescript": "^5.7.2"

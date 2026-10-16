@@ -4,7 +4,7 @@
 // ==========================================================
 
 import * as crypto from 'crypto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { StructuredLogger } from '@kdi/shared';
 import type {
   ExecutionRequestPayload,
@@ -28,8 +28,8 @@ export class RemoteExecutionChannelService {
   private simulateTimeout = false;
   private simulateProcessFailure = false;
 
-  constructor(secretKey = 'kdi_exec_token_default_secret') {
-    this.sharedSecret = secretKey;
+  constructor(@Optional() secretKey?: string) {
+    this.sharedSecret = secretKey || 'kdi_exec_token_default_secret';
   }
 
   /**
