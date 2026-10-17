@@ -47,6 +47,15 @@ export class EngineeringRepository {
             JSON.stringify(session.metadata || {}),
           ]
         );
+
+        if (session.executionId) {
+          await pool.query(
+            `INSERT INTO engineering_executions (execution_id, session_id, task_id, agent_id, attempt, status, current_phase, started_at)
+             VALUES ($1, $2, $3, $4, 1, 'EXECUTING', 'INSPECT', CURRENT_TIMESTAMP)
+             ON CONFLICT (execution_id) DO UPDATE SET session_id = $2, status = 'EXECUTING'`,
+            [session.executionId, session.sessionId, session.taskId, session.agentId]
+          );
+        }
       } catch (err: any) {
         this.logger.debug('saveSession', `PostgreSQL write skipped / fallback to memory: ${err.message}`);
       }
@@ -91,6 +100,14 @@ export class EngineeringRepository {
     const pool = this.postgresService?.getPool();
     if (pool) {
       try {
+        // Ensure parent execution row exists for foreign key constraint (§4)
+        await pool.query(
+          `INSERT INTO engineering_executions (execution_id, task_id, agent_id, attempt, status, current_phase, started_at, ended_at)
+           VALUES ($1, 'unknown_task', 'unknown_agent', 1, $2, 'VERIFY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+           ON CONFLICT (execution_id) DO UPDATE SET status = $2, ended_at = CURRENT_TIMESTAMP`,
+          [result.executionId, result.status]
+        );
+
         const resultId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
         await pool.query(
           `INSERT INTO engineering_results (result_id, execution_id, status, summary, diff_summary, commit_hash, files_changed, files_created, files_deleted, tests_run, tests_passed, tests_failed, build_status, lint_status, typecheck_status, security_findings, verification_evidence)

@@ -3,4 +3,15 @@ node_modules
 dist
 **/dist
 .git
+**/.git
 .worktrees
+**/.worktrees
+backups
+**/backups
+scratch
+**/scratch
+coverage
+**/coverage
+.system_generated
+**/.system_generated
+

@@ -3972,6 +3972,730 @@ export interface BenchmarkRun {
   interventions: HumanIntervention[];
 }
 
+// ==========================================================
+// Phase 22: Controlled Clarification Elimination & Assumption Ledger
+// ==========================================================
+
+export type AmbiguityClass = 'A' | 'B' | 'C' | 'D';
+export type ReversibilityLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type DecisionRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type DecisionAction = 'INFER' | 'PROCEED_WITH_DEFAULT' | 'ASK_HUMAN' | 'HARD_STOP';
+export type AssumptionStatus = 'ACTIVE' | 'CONFIRMED' | 'INVALIDATED';
+export type ClarificationMode = 'MINIMAL_SAFE';
+
+export interface DecisionRecord {
+  ambiguityId: string;
+  classification: AmbiguityClass;
+  assumption?: string;
+  evidence?: string[];
+  confidence: number;
+  reversibility: ReversibilityLevel;
+  risk: DecisionRiskLevel;
+  decision: DecisionAction;
+  affectedScope?: string[];
+  contradictionDetected?: boolean;
+  contradictionDetails?: string;
+  reason?: string;
+}
+
+export interface AssumptionRecord {
+  assumptionId: string;
+  taskId: string;
+  ambiguityId: string;
+  decision: DecisionAction;
+  assumption: string;
+  evidence: string[];
+  confidence: number;
+  risk: DecisionRiskLevel;
+  reversibility: ReversibilityLevel;
+  timestamp: string;
+  result: AssumptionStatus;
+  invalidationReason?: string;
+  verifiedAt?: string;
+}
+
+export interface Phase22Metrics {
+  tasksTotal: number;
+  tasksCompleted: number;
+  clarificationsTotal: number;
+  unnecessaryClarifications: number;
+  requiredClarifications: number;
+  clarificationsAvoided: number;
+  incorrectAssumptions: number;
+  assumptionAccuracy: number;
+  repairAttempts: number;
+  humanInterventions: number;
+  unsafeActions: number;
+  safetyViolations: number;
+  unauthorizedActions: number;
+  approvalBypassAttempts: number;
+  verificationFailures: number;
+  taskSuccessRate: number;
+  clarificationReductionRate: number;
+  unsafeAutonomyRate: number;
+}
+
+// ==========================================================
+// Phase 23: High-Performance Worktree Pool & Runner Optimization Types (§5–§16)
+// ==========================================================
+
+export type PooledWorktreeState =
+  | 'IDLE'
+  | 'CLAIMED'
+  | 'RESETTING'
+  | 'READY'
+  | 'EXECUTING'
+  | 'VERIFYING'
+  | 'SANITIZING'
+  | 'QUARANTINED';
+
+export type WorktreeIntegrityStatus = 'CLEAN' | 'DIRTY' | 'SUSPECT' | 'QUARANTINED';
+
+export type StorageHealthStatus = 'HEALTHY' | 'WARNING' | 'CRITICAL';
+
+export type CacheCategory =
+  | 'SAFE_SHARED_CACHE'
+  | 'TASK_SCOPED_CACHE'
+  | 'WORKTREE_SCOPED_CACHE'
+  | 'NON_SHAREABLE_STATE';
+
+export type ExecutionFailureClass =
+  | 'WORKTREE_CREATE_FAILURE'
+  | 'WORKTREE_RESET_FAILURE'
+  | 'WORKTREE_LOCK_FAILURE'
+  | 'PROCESS_START_FAILURE'
+  | 'PROCESS_TIMEOUT'
+  | 'TEST_RUNNER_FAILURE'
+  | 'CLEANUP_FAILURE'
+  | 'STORAGE_CRITICAL'
+  | 'STALE_LEASE'
+  | 'UNKNOWN_STATE';
+
+export type WorktreePoolEventType =
+  | 'WORKTREE_POOL_CLAIM'
+  | 'WORKTREE_POOL_WAIT'
+  | 'WORKTREE_RESET_START'
+  | 'WORKTREE_RESET_END'
+  | 'PROCESS_START'
+  | 'PROCESS_READY'
+  | 'TEST_RUN_START'
+  | 'TEST_RUN_END'
+  | 'WORKTREE_SANITIZE'
+  | 'WORKTREE_RELEASE'
+  | 'WORKTREE_QUARANTINE';
+
+export interface WorktreePoolTelemetryEvent {
+  eventId: string;
+  type: WorktreePoolEventType;
+  taskId: string;
+  projectId: string;
+  worktreeId: string;
+  timestamp: string;
+  durationMs: number;
+  status: 'SUCCESS' | 'FAILURE' | 'SKIPPED' | 'QUARANTINED';
+  metadata?: Record<string, unknown>;
+}
+
+export interface PooledWorktree {
+  worktreeId: string;
+  worktreePath: string;
+  baseRepoPath: string;
+  state: PooledWorktreeState;
+  integrityStatus: WorktreeIntegrityStatus;
+  currentTaskId?: string;
+  leaseId?: string;
+  cleanRef: string;
+  currentBranch?: string;
+  createdAt: number;
+  claimedAt?: number;
+  releasedAt?: number;
+  lastResetAt?: number;
+  quarantineReason?: string;
+  stats: {
+    totalClaims: number;
+    successfulResets: number;
+    failedResets: number;
+  };
+}
+
+export interface WorktreePoolConfig {
+  poolSize: number;
+  baseStorageDir: string;
+  enablePreWarming: boolean;
+  resetTimeoutMs: number;
+  leaseTimeoutMs: number;
+  quarantineOnDirty: boolean;
+  storageWarningThresholdMb: number;
+  storageCriticalThresholdMb: number;
+}
+
+export interface WorktreeClaimResult {
+  success: boolean;
+  worktree?: PooledWorktree;
+  poolHit: boolean;
+  waitDurationMs: number;
+  error?: string;
+}
+
+export interface WorktreeResetResult {
+  success: boolean;
+  clean: boolean;
+  durationMs: number;
+  untrackedFilesRemoved: string[];
+  quarantined: boolean;
+  reason?: string;
+}
+
+export interface StorageHealthReport {
+  status: StorageHealthStatus;
+  totalDiskMb: number;
+  freeDiskMb: number;
+  usedDiskMb: number;
+  monitoredPaths: string[];
+  criticalThresholdMb: number;
+  warningThresholdMb: number;
+  isAllocationBlocked: boolean;
+  timestamp: string;
+}
+
+export interface Phase23MetricsScorecard {
+  baselineMachineCycleMs: number;
+  optimizedMachineCycleMs: number;
+  overallImprovementPct: number;
+  worktreeOverheadBeforeMs: number;
+  worktreeOverheadAfterMs: number;
+  processStartupBeforeMs: number;
+  processStartupAfterMs: number;
+  testStartupBeforeMs: number;
+  testStartupAfterMs: number;
+  p50Ms: number;
+  p95Ms: number;
+  p99Ms: number;
+  poolHitRatePct: number;
+  poolMissRatePct: number;
+  quarantineCount: number;
+  recoverySuccessRatePct: number;
+  crossTaskContaminationCount: number;
+  secretLeakageCount: number;
+  safetyViolationsCount: number;
+  approvalBypassesCount: number;
+  regressionsCount: number;
+}
+
+// ==========================================================
+// Phase 24: Real Work Reliability & Pre-Production Operational Gate Types (§1–§15)
+// ==========================================================
+
+export type RealTaskProject = 'SIMMACI' | 'ILMORA' | 'KDI';
+
+export type RealTaskType =
+  | 'BUG_FIX'
+  | 'FEATURE'
+  | 'REFACTOR'
+  | 'SECURITY_HARDENING'
+  | 'REGRESSION_FIX'
+  | 'CODE_QUALITY';
+
+export type RealTaskDomain =
+  | 'BACKEND'
+  | 'FRONTEND'
+  | 'QA'
+  | 'SECURITY'
+  | 'DEVOPS'
+  | 'FULLSTACK';
+
+export interface RealEngineeringTask {
+  taskId: string;
+  project: RealTaskProject;
+  repository: string;
+  title: string;
+  description: string;
+  taskType: RealTaskType;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  domain: RealTaskDomain;
+  targetBranch: string;
+  assignedAgent: string;
+  acceptanceCriteria: string[];
+  expectedFiles: string[];
+  testFiles: string[];
+  justification: string;
+}
+
+export interface DefinitionOfDoneChecklist {
+  implementationCompleted: boolean;
+  requiredTestsPassed: boolean;
+  typecheckBuildPassed: boolean;
+  acceptanceCriteriaVerified: boolean;
+  worktreeStateValid: boolean;
+  noUnresolvedBlockers: boolean;
+  isReadyForDeploy: boolean;
+  failureReasons?: string[];
+}
+
+export type FailureInjectionType =
+  | 'AGENT_PROCESS_FAILURE'
+  | 'TEST_FAILURE'
+  | 'TIMEOUT'
+  | 'EXECUTION_STATE_FAILURE'
+  | 'STALE_LOCK'
+  | 'DUPLICATE_REQUEST'
+  | 'NONE';
+
+export interface TaskExecutionRecord {
+  taskId: string;
+  project: RealTaskProject;
+  repository: string;
+  description: string;
+  acceptanceCriteria: string[];
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  assignedAgent: string;
+  worktree: string;
+  executionId: string;
+  startTime: string;
+  endTime: string;
+  durationMs: number;
+  attemptCount: number;
+  testResult: {
+    run: number;
+    passed: number;
+    failed: number;
+    status: 'PASSED' | 'FAILED' | 'SKIPPED';
+  };
+  verificationResult: {
+    passed: boolean;
+    verifiedCriteria: string[];
+    details: string;
+  };
+  definitionOfDone: DefinitionOfDoneChecklist;
+  finalStatus: 'READY_FOR_DEPLOY' | 'NOT_READY' | 'REPAIR' | 'FAILED';
+  humanInterventionCount: number;
+  humanInterventionReasons: string[];
+  statusTransitions: Array<{
+    from: string;
+    to: string;
+    timestamp: string;
+  }>;
+  auditTrail: {
+    whatWasWorkedOn: string;
+    whoWorkedOnIt: string;
+    worktreeUsed: string;
+    failuresEncountered: string[];
+    failureReasons: string[];
+    repairAttempts: number;
+    recoveryActionsTaken: string[];
+    whyReadyForDeploy: string;
+  };
+}
+
+export interface FailureRecoveryRecord {
+  failureType: FailureInjectionType;
+  detected: boolean;
+  detectionMechanism: string;
+  recoveryAction: string;
+  statePreserved: boolean;
+  manualInterventionRequired: boolean;
+  result: 'RECOVERED_TO_READY_FOR_DEPLOY' | 'FAILED';
+}
+
+export interface RestartValidationRecord {
+  scenario: string;
+  statePreserved: boolean;
+  taskResumed: boolean;
+  finalVerification: boolean;
+  result: 'PASS' | 'FAIL';
+}
+
+export interface IdempotencyValidationRecord {
+  operation: string;
+  initialState: string;
+  repeatedOperation: string;
+  finalState: string;
+  result: 'PASS' | 'FAIL';
+}
+
+export interface ConcurrencyValidationRecord {
+  concurrentTasks: number;
+  maxConcurrency: number;
+  resourceBehavior: string;
+  isolationResult: 'ISOLATED' | 'LEAKED';
+  failures: number;
+}
+
+export interface Phase24MetricsScorecard {
+  totalTasks: number;
+  autonomousTasks: number;
+  tasksRequiringIntervention: number;
+  averageIntervention: number;
+  repairSuccessRatePct: number;
+  recoverySuccessRatePct: number;
+  verificationSuccessRatePct: number;
+  productionDeploymentPerformed: boolean;
+  taskRecords: TaskExecutionRecord[];
+  failureRecoveries: FailureRecoveryRecord[];
+  restartValidations: RestartValidationRecord[];
+  idempotencyValidations: IdempotencyValidationRecord[];
+  concurrencyValidations: ConcurrencyValidationRecord[];
+  performanceComparison: {
+    phase23MachineCycleMs: number;
+    phase24MachineCycleMs: number;
+    p50Ms: number;
+    p95Ms: number;
+    p99Ms: number;
+    regressionDetected: boolean;
+  };
+}
+
+// ──────────────────────────────────────────────────────────
+// PHASE 25: SUSTAINED AUTONOMOUS ENGINEERING OPERATIONS TYPES
+// ──────────────────────────────────────────────────────────
+
+export type SustainedTaskPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+export type TaskComplexity = 'LOW' | 'MEDIUM' | 'HIGH' | 'COMPLEX';
+export type SustainedTaskFinalStatus =
+  | 'READY_FOR_DEPLOY'
+  | 'ESCALATED'
+  | 'CANCELLED'
+  | 'BLOCKED'
+  | 'NOT_READY';
+
+export type SustainedFailurePattern =
+  | 'NONE'
+  | 'TEST_FAILURE_REPAIR'
+  | 'TIMEOUT_RETRY'
+  | 'AGENT_CRASH_RECOVERY'
+  | 'REPEATED_FAILURE_ESCALATION';
+
+export interface SustainedEngineeringTask {
+  taskId: string;
+  project: RealTaskProject;
+  repository: string;
+  title: string;
+  description: string;
+  taskType: RealTaskType;
+  priority: SustainedTaskPriority;
+  domain: RealTaskDomain;
+  targetBranch: string;
+  assignedAgent: string;
+  estimatedComplexity: TaskComplexity;
+  acceptanceCriteria: string[];
+  expectedFiles: string[];
+  testFiles: string[];
+  justification: string;
+  injectedFailurePattern?: SustainedFailurePattern;
+}
+
+export interface SustainedTaskExecutionRecord {
+  taskId: string;
+  project: RealTaskProject;
+  description: string;
+  acceptanceCriteria: string[];
+  priority: SustainedTaskPriority;
+  estimatedComplexity: TaskComplexity;
+  assignedAgent: string;
+  worktree: string;
+  executionId: string;
+  createdAt: string;
+  startedAt: string;
+  completedAt: string;
+  queueWaitMs: number;
+  executionMs: number;
+  totalTaskMs: number;
+  attemptCount: number;
+  repairCount: number;
+  finalStatus: SustainedTaskFinalStatus;
+  humanInterventionCount: number;
+  escalationReason?: string;
+  blockReason?: string;
+  statusTransitions: Array<{
+    from: string;
+    to: string;
+    timestamp: string;
+  }>;
+}
+
+export interface ResourceSnapshot {
+  phase: 'START' | 'MID' | 'END';
+  timestamp: string;
+  rssMb: number;
+  heapUsedMb: number;
+  heapTotalMb: number;
+  externalMb: number;
+  activeWorktrees: number;
+  quarantinedWorktrees: number;
+  availableWorktrees: number;
+  activeLeases: number;
+  queueDepth: number;
+  activeProcesses: number;
+}
+
+export interface WaveExecutionMetrics {
+  waveIndex: number;
+  waveName: string;
+  tasksCount: number;
+  completedCount: number;
+  readyForDeployCount: number;
+  failedCount: number;
+  escalatedCount: number;
+  cancelledCount: number;
+  blockedCount: number;
+  retryCount: number;
+  repairCount: number;
+  queueWaitP50Ms: number;
+  queueWaitP95Ms: number;
+  executionP50Ms: number;
+  executionP95Ms: number;
+  executionP99Ms: number;
+  totalLifecycleP50Ms: number;
+  resourceState: ResourceSnapshot;
+  invariantsVerified: boolean;
+}
+
+export interface Phase25SustainedScorecard {
+  totalTasks: number;
+  completedTasks: number;
+  readyForDeployTasks: number;
+  escalatedTasks: number;
+  cancelledTasks: number;
+  blockedTasks: number;
+  autonomousTasks: number;
+  humanInterventionCount: number;
+  averageInterventionPerTask: number;
+  productionDeploymentPerformed: boolean;
+  waves: WaveExecutionMetrics[];
+  queueReliability: {
+    lostTasks: number;
+    duplicateTasks: number;
+    starvationEvents: number;
+    maxQueueDepth: number;
+    queueWaitP50Ms: number;
+    queueWaitP95Ms: number;
+    totalDispatches: number;
+  };
+  worktreeHealth: {
+    worktreesCreated: number;
+    reusedCount: number;
+    quarantinedCount: number;
+    exhaustionEvents: number;
+    staleLeasesDetected: number;
+    duplicateWorktreesDetected: number;
+    totalRecycles: number;
+    failedRecycles: number;
+  };
+  agentHealth: {
+    agentExecutions: number;
+    agentFailures: number;
+    recoveries: number;
+    escalations: number;
+    infiniteRetryIncidents: number;
+    capacityRejections: number;
+  };
+  resourceEndurance: {
+    start: ResourceSnapshot;
+    mid: ResourceSnapshot;
+    end: ResourceSnapshot;
+    memoryLeakDetected: boolean;
+    worktreeLeakDetected: boolean;
+  };
+  reliability: {
+    taskSuccessRatePct: number;
+    recoverySuccessRatePct: number;
+    retrySuccessRatePct: number;
+    verificationSuccessRatePct: number;
+    stateIntegrityPct: number;
+    crossProjectContaminationCount: number;
+  };
+  performance: {
+    phase23CoreCycleMs: number;
+    phase24MachineCycleMs: number;
+    phase25CoreCycleMs: number;
+    queueLatencyP50Ms: number;
+    taskLifecycleP50Ms: number;
+    taskLifecycleP95Ms: number;
+    taskLifecycleP99Ms: number;
+    recoveryLatencyMs: number;
+    progressiveDegradationDetected: boolean;
+  };
+}
+
+// ──────────────────────────────────────────────────────────
+// PHASE 26: CONTROLLED PRODUCTION DELIVERY & ROLLBACK TYPES
+// ──────────────────────────────────────────────────────────
+
+export type DeliveryEnvironment = 'STAGING' | 'PRODUCTION';
+
+export type DeliveryState =
+  | 'READY_FOR_DEPLOY'
+  | 'AWAITING_APPROVAL'
+  | 'APPROVED'
+  | 'PRECHECKING'
+  | 'STAGING_DEPLOYING'
+  | 'STAGING_VERIFYING'
+  | 'STAGING_VERIFIED'
+  | 'PRODUCTION_CANARY'
+  | 'CANARY_VERIFYING'
+  | 'ROLLING_OUT'
+  | 'PRODUCTION_VERIFIED'
+  | 'ROLLING_BACK'
+  | 'ROLLBACK_VERIFYING'
+  | 'RESTORED'
+  | 'DEPLOYMENT_BLOCKED'
+  | 'DEPLOYMENT_FAILED'
+  | 'ROLLBACK_FAILED'
+  | 'REQUIRES_HUMAN_REVIEW';
+
+export type MigrationReversibility =
+  | 'REVERSIBLE'
+  | 'FORWARD_COMPATIBLE'
+  | 'IRREVERSIBLE_WITH_RECOVERY_STRATEGY';
+
+export interface ImmutableArtifactMetadata {
+  projectId: 'SIMMACI' | 'ILMORA' | 'KDI';
+  repository: string;
+  commitSha: string;
+  branch: string;
+  buildIdentifier: string;
+  artifactDigestSha256: string;
+  artifactPath: string;
+  buildTimestamp: string;
+  sizeBytes: number;
+}
+
+export interface HumanApprovalRecord {
+  approvalId: string;
+  approverIdentity: string;
+  approvedAt: string;
+  targetEnvironment: DeliveryEnvironment;
+  artifactDigestSha256: string;
+  deploymentPlanSummary: string;
+  rollbackTargetSha: string;
+  approvalToken: string;
+}
+
+export interface PreDeployValidationResult {
+  isValid: boolean;
+  sourceCommitVerified: boolean;
+  artifactDigestVerified: boolean;
+  buildCompleted: boolean;
+  requiredTestsPassed: boolean;
+  typecheckBuildPassed: boolean;
+  securityChecksPassed: boolean;
+  environmentTargetValid: boolean;
+  deploymentConfigValid: boolean;
+  requiredSecretsPresent: boolean;
+  databaseMigrationSafe: boolean;
+  rollbackTargetExists: boolean;
+  migrationType?: MigrationReversibility;
+  blockReasons: string[];
+}
+
+export interface StagingVerificationResult {
+  passed: boolean;
+  serviceReachable: boolean;
+  healthCheckPassed: boolean;
+  smokeTestsPassed: number;
+  smokeTestsTotal: number;
+  regressionTestsPassed: number;
+  details: string[];
+}
+
+export interface ProductionCanaryMetrics {
+  canaryPercentage: number;
+  canaryDurationMs: number;
+  trafficScope: string;
+  errorRatePct: number;
+  p95LatencyMs: number;
+  smokeTestsPassed: boolean;
+  isHealthy: boolean;
+  failureTrigger?: string;
+}
+
+export interface PostDeployVerificationResult {
+  serviceReachable: boolean;
+  healthCheckPassed: boolean;
+  criticalEndpointSmokeTestsPassed: boolean;
+  errorSignalAcceptable: boolean;
+  databaseConnectionHealthy: boolean;
+  databaseMigrationStateExpected: boolean;
+  allChecksPassed: boolean;
+  verificationDetails: string[];
+}
+
+export interface RollbackExecutionRecord {
+  rollbackExecutionId: string;
+  rollbackTargetCommit: string;
+  rollbackTargetDigest: string;
+  rollbackReason: string;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  postRollbackVerificationPassed: boolean;
+  restoredVersion: string;
+  finalState: 'RESTORED' | 'ROLLBACK_FAILED';
+}
+
+export interface ControlledDeliveryRecord {
+  deploymentId: string;
+  project: 'SIMMACI' | 'ILMORA' | 'KDI';
+  environment: DeliveryEnvironment;
+  artifact: ImmutableArtifactMetadata;
+  approval?: HumanApprovalRecord;
+  preDeployValidation: PreDeployValidationResult;
+  stagingVerification?: StagingVerificationResult;
+  canaryMetrics?: ProductionCanaryMetrics;
+  postDeployVerification?: PostDeployVerificationResult;
+  rollbackRecord?: RollbackExecutionRecord;
+  currentActiveVersion: string;
+  currentState: DeliveryState;
+  startTime: string;
+  endTime: string;
+  durationMs: number;
+  interruptedAndRecovered: boolean;
+  statusTransitions: Array<{
+    from: DeliveryState;
+    to: DeliveryState;
+    timestamp: string;
+    reason?: string;
+  }>;
+  auditTrail: {
+    whatWasDeployed: string;
+    commitSha: string;
+    artifactDigest: string;
+    whoApproved: string;
+    whereDeployed: string;
+    healthChecksSummary: string;
+    didRollbackOccur: boolean;
+    activeVersionCurrently: string;
+  };
+}
+
+export interface Phase26DeliveryScorecard {
+  deliveries: ControlledDeliveryRecord[];
+  totalDeliveries: number;
+  successfulProductionDeliveries: number;
+  verifiedStagingDeliveries: number;
+  controlledRollbacks: number;
+  blockedDeliveries: number;
+  unauthorizedAttemptsBlocked: number;
+  interruptedRecoveries: number;
+  secretLeakageDetected: boolean;
+  artifactImmutabilityVerified: boolean;
+  humanProductionApprovalEnforced: boolean;
+  performance: {
+    avgPrecheckDurationMs: number;
+    avgStagingDurationMs: number;
+    avgStagingVerificationMs: number;
+    avgApprovalToProdDurationMs: number;
+    avgCanaryVerificationMs: number;
+    avgRollbackDurationMs: number;
+    avgPostRollbackVerificationMs: number;
+  };
+}
+
+
+
+
+
+
 
 
 

@@ -188,12 +188,14 @@ export class EngineeringStateMachine {
     ],
     ENGINEERING_REVIEW: [
       'READY_FOR_APPROVAL',
+      'READY_FOR_DEPLOY',
       'REVIEW_FAILED',
       'REPAIRING',
       'CANCEL_REQUESTED',
       'CANCELLED',
     ],
     READY_FOR_APPROVAL: [
+      'READY_FOR_DEPLOY',
       'APPROVED',
       'APPROVAL_REJECTED',
       'APPROVAL_INVALIDATED',

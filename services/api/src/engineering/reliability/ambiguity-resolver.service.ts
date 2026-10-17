@@ -1,14 +1,32 @@
 // ==========================================================
 // services/api/src/engineering/reliability/ambiguity-resolver.service.ts
-// Phase 19: Ambiguity Classification, Context Inference & Actionable Clarification (§17–§21)
+// Phase 19 & Phase 22: Ambiguity Classification, Context Inference & Controlled Clarification
 // ==========================================================
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { StructuredLogger } from '@kdi/shared';
 import type {
   AmbiguityCategory,
   AmbiguityClassificationResult,
 } from './reliability.types.js';
+import {
+  ControlledAmbiguityClassifierService,
+  type AmbiguityEvaluationInput,
+} from '../decision/controlled-ambiguity-classifier.service.js';
+import {
+  AssumptionLedgerService,
+} from '../decision/assumption-ledger.service.js';
+import {
+  ClarificationPolicyEngine,
+} from '../decision/clarification-policy.engine.js';
+import {
+  PartialExecutionCoordinator,
+} from '../decision/partial-execution.coordinator.js';
+import type {
+  DecisionRecord,
+  AssumptionRecord,
+  StructuredClarificationPrompt,
+} from '../decision/decision.types.js';
 
 export interface ProjectContextClues {
   framework: string;
@@ -18,13 +36,79 @@ export interface ProjectContextClues {
   existingPatterns?: string[];
 }
 
+export interface Phase22TaskEvaluationResult {
+  decisionRecord: DecisionRecord;
+  assumptionRecord?: AssumptionRecord;
+  shouldAskClarification: boolean;
+  isHardStop: boolean;
+  structuredPrompt?: StructuredClarificationPrompt;
+}
+
 @Injectable()
 export class AmbiguityResolverService {
   private readonly logger = new StructuredLogger('AmbiguityResolverService');
 
+  public readonly classifier: ControlledAmbiguityClassifierService;
+  public readonly ledger: AssumptionLedgerService;
+  public readonly policy: ClarificationPolicyEngine;
+  public readonly partialCoordinator: PartialExecutionCoordinator;
+
+  constructor(
+    @Optional() classifier?: ControlledAmbiguityClassifierService,
+    @Optional() ledger?: AssumptionLedgerService,
+    @Optional() policy?: ClarificationPolicyEngine,
+    @Optional() partialCoordinator?: PartialExecutionCoordinator
+  ) {
+    this.classifier = classifier || new ControlledAmbiguityClassifierService();
+    this.ledger = ledger || new AssumptionLedgerService();
+    this.policy = policy || new ClarificationPolicyEngine();
+    this.partialCoordinator = partialCoordinator || new PartialExecutionCoordinator();
+  }
+
   /**
-   * Classify and resolve task ambiguity (§17, §18, §19):
-   * Distinguishes technical ambiguity (auto-inferable) from business/security ambiguity (needs clarification).
+   * Phase 22 Evaluator: Classify ambiguity, manage Assumption Ledger, and enforce MINIMAL_SAFE clarification policy
+   */
+  public evaluatePhase22Task(input: AmbiguityEvaluationInput): Phase22TaskEvaluationResult {
+    const decisionRecord = this.classifier.classifyAmbiguity(input);
+    const shouldAskClarification = this.policy.shouldAskClarification(decisionRecord);
+    const isHardStop = decisionRecord.classification === 'D';
+
+    let assumptionRecord: AssumptionRecord | undefined;
+    let structuredPrompt: StructuredClarificationPrompt | undefined;
+
+    // Class A or B: Do not ask clarification, create assumption in ledger (§3, §4)
+    if (!shouldAskClarification && decisionRecord.assumption) {
+      assumptionRecord = this.ledger.recordAssumption({
+        taskId: input.taskId,
+        ambiguityId: decisionRecord.ambiguityId,
+        decision: decisionRecord.decision,
+        assumption: decisionRecord.assumption,
+        evidence: decisionRecord.evidence || [],
+        confidence: decisionRecord.confidence,
+        risk: decisionRecord.risk,
+        reversibility: decisionRecord.reversibility,
+      });
+    }
+
+    // Class C or D: Must format structured question (§15)
+    if (shouldAskClarification) {
+      structuredPrompt = this.policy.formatStructuredClarificationPrompt(
+        decisionRecord,
+        input.taskTitle
+      );
+    }
+
+    return {
+      decisionRecord,
+      assumptionRecord,
+      shouldAskClarification,
+      isHardStop,
+      structuredPrompt,
+    };
+  }
+
+  /**
+   * Phase 19 Backward Compatibility: Classify and resolve task ambiguity
    */
   public analyzeAmbiguity(
     taskDescription: string,

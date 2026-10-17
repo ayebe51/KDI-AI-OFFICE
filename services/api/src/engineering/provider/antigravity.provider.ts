@@ -17,6 +17,10 @@ import type {
   AgentDefinition,
 } from '@kdi/types';
 import type { EngineeringProvider } from './engineering-provider.interface.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import type { ExecutionProvider } from '../../runtime/execution/execution-provider.interface.js';
 import { AntigravitySDKAdapter } from '../adapter/antigravity-sdk.adapter.js';
 import { AntigravityCLIAdapter } from '../adapter/antigravity-cli.adapter.js';
@@ -25,7 +29,10 @@ import { CommandClassifier } from '../security/command-classifier.js';
 import { PromptInjectionDefense } from '../security/prompt-injection-defense.js';
 import { VerificationGate } from '../verification/verification-gate.js';
 import { ApprovalGateService } from '../security/approval-gate.service.js';
+import { EngineeringCodingWorker } from '../execution/coding-worker.service.js';
 import { StructuredLogger } from '@kdi/shared';
+
+const execAsync = promisify(exec);
 
 export class AntigravityEngineeringProvider implements EngineeringProvider, ExecutionProvider {
   public readonly providerType: EngineeringProviderType = 'antigravity';
@@ -36,6 +43,7 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
   private readonly workspaceManager: WorkspaceManager;
   private readonly verificationGate: VerificationGate;
   private readonly approvalGate: ApprovalGateService;
+  private readonly codingWorker: EngineeringCodingWorker;
 
   private readonly sessions = new Map<string, EngineeringSession>();
   private readonly results = new Map<string, EngineeringResult>();
@@ -47,13 +55,15 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
     cliAdapter?: AntigravityCLIAdapter,
     workspaceManager?: WorkspaceManager,
     verificationGate?: VerificationGate,
-    approvalGate?: ApprovalGateService
+    approvalGate?: ApprovalGateService,
+    codingWorker?: EngineeringCodingWorker
   ) {
     this.sdkAdapter = sdkAdapter || new AntigravitySDKAdapter();
     this.cliAdapter = cliAdapter || new AntigravityCLIAdapter();
     this.workspaceManager = workspaceManager || new WorkspaceManager();
     this.verificationGate = verificationGate || new VerificationGate();
     this.approvalGate = approvalGate || new ApprovalGateService();
+    this.codingWorker = codingWorker || new EngineeringCodingWorker();
   }
 
   /**
@@ -211,11 +221,77 @@ ${context.constraints.map((c) => `- ${c}`).join('\n')}
         agentResultText = sdkExec.result;
         toolCallsCount = sdkExec.toolCalls.length;
         this.usages.set(sessionId, sdkExec.usage);
-      } else {
+      } else if (await this.cliAdapter.probeCLI()) {
         const cliExec = await this.cliAdapter.execute(engineeringPrompt, context, signal);
         agentResultText = cliExec.agentResponse;
         toolCallsCount = cliExec.toolCalls.length;
         this.usages.set(sessionId, cliExec.usage);
+        if (cliExec.status === 'FAILED' || toolCallsCount === 0) {
+          // If CLI returned no mutations or failed, dispatch to internal KDI EngineeringCodingWorker
+          const workResult = await this.codingWorker.executeWork(
+            {
+              taskId: task.taskId,
+              title: task.title,
+              description: task.description,
+              project: context.projectId,
+              repository: context.repository || workspace.workspacePath,
+              repositoryPath: workspace.workspacePath,
+              taskType: (task as any).type || (task as any).taskType || 'FEATURE',
+              domain: 'BACKEND',
+              agent: context.agentRole,
+              agentName: context.agentRole,
+              acceptanceCriteria: context.acceptanceCriteria,
+              constraints: context.constraints,
+              branch: context.branch,
+              executor: 'CODING_WORKER',
+              timeout: 60000,
+              environment: (context.environment as Record<string, string>) || {},
+              requestedBy: 'operator',
+            },
+            workspace.workspacePath,
+            1
+          );
+          if (workResult.changesMade || !agentResultText) {
+            agentResultText = workResult.output || (workResult.changesMade ? 'Code changes applied by EngineeringCodingWorker.' : workResult.error || 'No changes made.');
+          }
+        }
+      } else {
+        // Physical Antigravity CLI/SDK not available in environment:
+        // Dispatch to internal KDI EngineeringCodingWorker for real repo inspection & surgical modifications
+        this.logger.info(
+          'executeTask',
+          `External LLM provider CLI/SDK not found on PATH. Delegating execution to internal EngineeringCodingWorker.`
+        );
+        const workResult = await this.codingWorker.executeWork(
+          {
+            taskId: task.taskId,
+            title: task.title,
+            description: task.description,
+            project: context.projectId,
+            repository: context.repository || workspace.workspacePath,
+            repositoryPath: workspace.workspacePath,
+            taskType: (task as any).type || (task as any).taskType || 'FEATURE',
+            domain: 'BACKEND',
+            agent: context.agentRole,
+            agentName: context.agentRole,
+            acceptanceCriteria: context.acceptanceCriteria,
+            constraints: context.constraints,
+            branch: context.branch,
+            executor: 'CODING_WORKER',
+            timeout: 60000,
+            environment: (context.environment as Record<string, string>) || {},
+            requestedBy: 'operator',
+          },
+          workspace.workspacePath,
+          1
+        );
+        agentResultText = workResult.output || (workResult.changesMade ? 'Code changes applied by EngineeringCodingWorker.' : workResult.error || 'No changes made.');
+        this.usages.set(sessionId, {
+          durationMs: Date.now() - startTime,
+          provider: 'coding-worker',
+          totalTokens: 0,
+          toolCallsCount: 0,
+        });
       }
     } catch (err: any) {
       this.logger.error('executeTask', `Implementation error: ${err.message}`);
@@ -260,15 +336,78 @@ ${context.constraints.map((c) => `- ${c}`).join('\n')}
       context
     );
 
-    // 6. Collect Git Diff & Changes
+    // 6. Collect Git Diff & Actual Changed Files
     const diffSummary = await this.workspaceManager.collectDiff(workspace.workspaceId);
+    let filesChanged: string[] = [];
+    let commitHash: string | undefined = undefined;
 
-    // 7. REPORT: Formulate verifiable EngineeringResult
+    try {
+      const isGit = fs.existsSync(path.join(workspace.workspacePath, '.git'));
+      if (isGit) {
+        const { stdout: statusOut } = await execAsync('git status --porcelain', {
+          cwd: workspace.workspacePath,
+        });
+        filesChanged = statusOut
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => line.replace(/^[A-Z?]+\s+/, '').trim());
+      } else {
+        const patchFile = path.join(workspace.workspacePath, 'patch.diff');
+        if (fs.existsSync(patchFile)) {
+          filesChanged = ['patch.diff'];
+        }
+      }
+    } catch {
+      filesChanged = [];
+    }
+
+    // Security Verification: Path validation against allowedPaths and forbiddenPaths
+    const securityFindings = [...promptInjectionCheck.patternsDetected];
+    if (context.forbiddenPaths && context.forbiddenPaths.length > 0) {
+      for (const changed of filesChanged) {
+        for (const forbidden of context.forbiddenPaths) {
+          const pattern = '^' + forbidden.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*');
+          if (new RegExp(pattern).test(changed)) {
+            securityFindings.push(`FORBIDDEN_PATH_MUTATION: File "${changed}" violates rule "${forbidden}"`);
+          }
+        }
+      }
+    }
+
+    // 7. Commit changes if verification passed and workspace is git repository
+    if (verification.passed && securityFindings.length === 0) {
+      try {
+        const isGitWorktree = fs.existsSync(path.join(workspace.workspacePath, '.git'));
+        const isBaseGit = workspace.baseRepoPath && fs.existsSync(path.join(workspace.baseRepoPath, '.git'));
+        if (isGitWorktree) {
+          if (filesChanged.length > 0) {
+            await execAsync('git add .', { cwd: workspace.workspacePath });
+            await execAsync(`git commit -m "feat(${context.projectId}): ${task.taskId} verified implementation"`, {
+              cwd: workspace.workspacePath,
+            });
+          }
+          const { stdout: hashOut } = await execAsync('git rev-parse HEAD', {
+            cwd: workspace.workspacePath,
+          });
+          commitHash = hashOut.trim();
+        } else if (isBaseGit) {
+          const { stdout: hashOut } = await execAsync('git rev-parse HEAD', {
+            cwd: workspace.baseRepoPath,
+          });
+          commitHash = hashOut.trim();
+        }
+      } catch (err: any) {
+        this.logger.warn('executeTask', `Could not create git commit: ${err.message}`);
+      }
+    }
+
+    // 8. REPORT: Formulate verifiable EngineeringResult
     const finalResult: EngineeringResult = {
       executionId: context.executionId,
-      status: verification.status,
+      status: securityFindings.length > 0 ? 'FAILED_VERIFICATION' : verification.status,
       summary: `${agentResultText}\n${verification.summary}`,
-      filesChanged: diffSummary.includes('No changes') ? [] : ['src/module.ts'],
+      filesChanged,
       filesCreated: [],
       filesDeleted: [],
       diffSummary,
@@ -278,10 +417,13 @@ ${context.constraints.map((c) => `- ${c}`).join('\n')}
       buildStatus: verification.buildStatus,
       lintStatus: verification.lintStatus,
       typecheckStatus: verification.typecheckStatus,
-      securityFindings: promptInjectionCheck.patternsDetected,
+      securityFindings,
       warnings: [],
-      blockers: verification.testsFailed.length > 0 ? ['One or more test suites failed'] : [],
-      commitHash: verification.passed ? `c_${Math.random().toString(36).slice(2, 9)}` : undefined,
+      blockers: [
+        ...(verification.testsFailed.length > 0 ? ['One or more test suites failed'] : []),
+        ...(securityFindings.length > 0 ? securityFindings : []),
+      ],
+      commitHash,
       verificationEvidence: verification.evidence,
     };
 

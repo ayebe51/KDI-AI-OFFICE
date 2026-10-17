@@ -20,6 +20,7 @@ import type {
   DiffResult,
   GitStatusResult,
 } from '../executor.interface.js';
+import type { WorktreePoolService } from '../../worktree-pool/index.js';
 
 const execAsync = promisify(exec);
 
@@ -27,9 +28,13 @@ export class GitWorkspaceAdapter {
   private readonly logger = new StructuredLogger('GitWorkspaceAdapter');
   private readonly protectedBranches = new Set(['main', 'master', 'production', 'release']);
 
+  public readonly poolService?: WorktreePoolService;
+
   constructor(
-    private readonly baseStorageDir = path.resolve(process.cwd(), '.worktrees')
+    private readonly baseStorageDir = path.resolve(process.cwd(), '.worktrees'),
+    poolService?: WorktreePoolService
   ) {
+    this.poolService = poolService;
     if (!fs.existsSync(this.baseStorageDir)) {
       try {
         fs.mkdirSync(this.baseStorageDir, { recursive: true });
@@ -191,6 +196,34 @@ export class GitWorkspaceAdapter {
 
     if (this.protectedBranches.has(safeBranch.toLowerCase())) {
       throw new Error(`SECURITY_VIOLATION: Direct workspace on protected branch "${safeBranch}" is strictly denied`);
+    }
+
+    // Phase 23: Pre-warmed pool claim path (§5)
+    if (this.poolService) {
+      try {
+        const claim = await this.poolService.claimWorktree(
+          context.taskId,
+          context.project,
+          safeBranch,
+          context.repositoryPath
+        );
+        if (claim.success && claim.worktree) {
+          return {
+            workspaceId: claim.worktree.worktreeId,
+            taskId: context.taskId,
+            baseRepoPath: context.repositoryPath,
+            worktreePath: claim.worktree.worktreePath,
+            branch: safeBranch,
+            isWorktree: true,
+            createdAt: new Date().toISOString(),
+          };
+        }
+      } catch (err: any) {
+        if (err.message.includes('STORAGE_CRITICAL')) {
+          throw err;
+        }
+        this.logger.warn('prepareWorkspace', `Pool claim note: ${err.message}. Falling back to dynamic allocation.`);
+      }
     }
 
     const worktreePath = path.join(this.baseStorageDir, workspaceId);
@@ -573,6 +606,18 @@ export class GitWorkspaceAdapter {
    * Remove worktree and clean workspace safely
    */
   public async cleanupWorkspace(worktreePath: string, repoPath?: string): Promise<void> {
+    // Phase 23: Pre-warmed pool release path (§6, §7)
+    if (this.poolService) {
+      for (const wt of (this.poolService as any).pool.values()) {
+        if (path.resolve(wt.worktreePath) === path.resolve(worktreePath)) {
+          if (wt.currentTaskId) {
+            await this.poolService.releaseWorktree(wt.worktreeId, wt.currentTaskId);
+            return;
+          }
+        }
+      }
+    }
+
     if (repoPath && fs.existsSync(path.join(repoPath, '.git'))) {
       try {
         await execAsync(`git worktree remove --force "${worktreePath}"`, {

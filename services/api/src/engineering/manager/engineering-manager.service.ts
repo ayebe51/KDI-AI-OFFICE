@@ -21,6 +21,8 @@ import {
   SelfRepairCoordinatorService,
   Phase19ComparisonGenerator,
   type Phase19ComparisonReport,
+  type Phase22TaskEvaluationResult,
+  type RepositoryContextClues,
 } from '../reliability/index.js';
 import {
   WindowsHostRegistryService,
@@ -189,6 +191,27 @@ export class EngineeringManagerService {
     );
 
     return queuedTask;
+  }
+
+  /**
+   * Phase 22: Evaluate task ambiguity, record machine-readable assumption or format structured clarification (§3, §4, §15)
+   */
+  public evaluateTaskDecision(
+    taskId: string,
+    title: string,
+    description: string,
+    acceptanceCriteria: string[],
+    constraints?: string[],
+    contextClues?: RepositoryContextClues
+  ): Phase22TaskEvaluationResult {
+    return this.ambiguityResolver.evaluatePhase22Task({
+      taskId,
+      taskTitle: title,
+      taskDescription: description,
+      acceptanceCriteria,
+      constraints,
+      contextClues,
+    });
   }
 
   /**

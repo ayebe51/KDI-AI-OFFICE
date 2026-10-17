@@ -20,7 +20,11 @@
     "docker:up": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml --env-file .env.local up -d\"",
     "docker:down": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml down\"",
     "docker:ps": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml ps\"",
-    "docker:logs": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml logs -f\""
+    "docker:logs": "wsl.exe -d Ubuntu -e bash -c \"cd '/mnt/d/apss-source/KDI AI OFFICE' && docker compose -f compose.local.yaml logs -f\"",
+    "docker:status": "pwsh -NoProfile -File infrastructure/scripts/kdi-status.ps1",
+    "docker:restart": "pwsh -NoProfile -File infrastructure/scripts/kdi-restart.ps1",
+    "docker:backup": "pwsh -NoProfile -File infrastructure/scripts/kdi-backup.ps1",
+    "docker:restore": "pwsh -NoProfile -File infrastructure/scripts/kdi-restore.ps1"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

@@ -103,6 +103,9 @@ Thumbs.db
 *.sw?
 
 # Scratch and ephemeral test artifacts
-scratch/test-agy-edit/
+scratch/
+backups/
+**/.worktrees/
 services/api/scratch/
 fixtures/**/.git/
+

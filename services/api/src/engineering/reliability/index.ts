@@ -11,3 +11,4 @@ export * from './devops-preflight.service.js';
 export * from './self-repair-coordinator.service.js';
 export * from './phase-19-benchmark.catalog.js';
 export * from './phase-19-comparison.generator.js';
+export * from '../decision/index.js';
