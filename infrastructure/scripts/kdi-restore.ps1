@@ -102,7 +102,14 @@ if ($IsolatedTest -and -not $ForceLiveRestore) {
   $rawCount = ($tableCountStr | Where-Object { $_ -match '^\s*\d+\s*$' } | Select-Object -First 1)
   $tableCount = if ($rawCount) { [int]$rawCount.Trim() } else { 0 }
 
+  # Verify row counts in key tables (engineering_executions & engineering_results)
+  $cmdExecCount = "docker exec -i kdi_postgres_local psql -U kdi_local_admin -d $testDb -t -A -c 'SELECT count(*) FROM engineering_executions;'"
+  $execCountStr = (wsl.exe -d Ubuntu -e bash -c "$cmdExecCount" | Where-Object { $_ -match '^\d+$' } | Select-Object -First 1)
+  $cmdResCount = "docker exec -i kdi_postgres_local psql -U kdi_local_admin -d $testDb -t -A -c 'SELECT count(*) FROM engineering_results;'"
+  $resCountStr = (wsl.exe -d Ubuntu -e bash -c "$cmdResCount" | Where-Object { $_ -match '^\d+$' } | Select-Object -First 1)
+
   Write-Host "    Successfully restored $tableCount public tables into sandbox $testDb." -ForegroundColor Green
+  Write-Host "    Key table row verification: engineering_executions=$execCountStr, engineering_results=$resCountStr" -ForegroundColor Gray
 
   # Cleanup temporary test database
   wsl.exe -d Ubuntu -e bash -c "docker exec -i kdi_postgres_local psql -U kdi_local_admin -d postgres -c 'DROP DATABASE $testDb;' >/dev/null 2>&1"
@@ -113,26 +120,28 @@ if ($IsolatedTest -and -not $ForceLiveRestore) {
   if (Test-Path $neo4jDumpPath) {
     Write-Host "[+] (2/3) Executing Neo4j ISOLATED RESTORE TEST into temporary sandbox volume..." -ForegroundColor Yellow
     $testVol = "kdi_neo4j_test_temp_data"
-    $neo4jTestCmd = "docker volume create ${testVol} >/dev/null 2>&1 && docker run --rm -v ${testVol}:/data -v '${wslTargetDir}:/backup:ro' neo4j:5.20-community neo4j-admin database load --from-path=/backup --overwrite-destination=true neo4j >/dev/null 2>&1 && docker run --rm -v ${testVol}:/data neo4j:5.20-community neo4j-admin database info neo4j && docker volume rm ${testVol} >/dev/null 2>&1"
-    $neo4jInfoOut = wsl.exe -d Ubuntu -e bash -c $neo4jTestCmd
-    $infoCheck = ($neo4jInfoOut | Where-Object { $_ -match "Database name:\s+neo4j" })
-    if ($infoCheck) {
-      Write-Host "    Successfully restored and validated Neo4j store in isolated sandbox volume." -ForegroundColor Green
+    $neo4jCmd = "docker volume rm -f $testVol >/dev/null 2>&1; docker volume create $testVol >/dev/null && docker run --rm -v ${testVol}:/data -v '${wslTargetDir}:/backup:ro' neo4j:5.20-community neo4j-admin database load --from-path=/backup --overwrite-destination=true neo4j >/dev/null && docker run --rm -v ${testVol}:/data neo4j:5.20-community neo4j-admin database check --check-graph=true --check-counts=true --check-indexes=true neo4j >/dev/null && docker volume rm $testVol >/dev/null && echo 'NEO4J_CONSISTENCY_PASS'"
+    $neo4jTestOut = wsl.exe -d Ubuntu -e bash -c "$neo4jCmd"
+    if ($neo4jTestOut -match "NEO4J_CONSISTENCY_PASS") {
+      Write-Host "    Successfully restored, loaded, and verified consistency of Neo4j graph archive." -ForegroundColor Green
     } else {
-      Write-Warning "Neo4j isolated restore did not report expected store header."
+      Write-Warning "Neo4j isolated restore did not pass store consistency check."
     }
   }
 
-  # 3.3 Redis RDB Snapshot Verification
+  # 3.3 Redis Isolated Restore Test (Real Container Boot & DBSIZE Inspection)
   $redisDumpPath = Join-Path $targetDir "redis.rdb"
   if (Test-Path $redisDumpPath) {
-    Write-Host "[+] (3/3) Validating Redis RDB snapshot header..." -ForegroundColor Yellow
-    $redisBytes = [System.IO.File]::ReadAllBytes($redisDumpPath)
-    $redisHeader = [System.Text.Encoding]::ASCII.GetString($redisBytes, 0, [Math]::Min(5, $redisBytes.Length))
-    if ($redisHeader -eq "REDIS") {
-      Write-Host "    Redis RDB snapshot signature verified ($($redisBytes.Length) bytes)." -ForegroundColor Green
+    Write-Host "[+] (3/3) Executing Redis ISOLATED RESTORE TEST in temporary container..." -ForegroundColor Yellow
+    $redisVol = "kdi_redis_restore_sandbox_vol"
+    $redisCmd = "docker volume rm -f $redisVol >/dev/null 2>&1; docker volume create $redisVol >/dev/null && docker run --rm -v ${redisVol}:/data -v '${wslTargetDir}:/backup:ro' alpine sh -c 'cp /backup/redis.rdb /data/dump.rdb && chown -R 999:999 /data' && docker run -d --name kdi_redis_temp_verifier -v ${redisVol}:/data redis:7-alpine redis-server --dir /data --dbfilename dump.rdb >/dev/null && sleep 2 && docker exec kdi_redis_temp_verifier redis-cli dbsize && docker rm -f kdi_redis_temp_verifier >/dev/null && docker volume rm $redisVol >/dev/null"
+    $redisRestoreOut = wsl.exe -d Ubuntu -e bash -c "$redisCmd"
+    $rawDbsize = ($redisRestoreOut | Where-Object { $_ -match '^\s*\d+\s*$' } | Select-Object -First 1)
+    if ($rawDbsize -ne $null) {
+      $dbsizeVal = [int]$rawDbsize.Trim()
+      Write-Host "    Redis container booted from snapshot and verified $dbsizeVal keys loaded into memory." -ForegroundColor Green
     } else {
-      Write-Warning "Redis snapshot does not match canonical REDIS signature."
+      Write-Warning "Redis isolated restore container did not report valid DBSIZE."
     }
   }
 

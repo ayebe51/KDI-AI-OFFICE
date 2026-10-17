@@ -50,7 +50,7 @@ export class LLMService {
     // Initialize canonical provider adapters
     const ollama = new OllamaAdapter(
       config.llm.ollamaBaseUrl,
-      'qwen2.5-coder:7b-instruct-q4_K_M',
+      'qwen2.5-coder:1.5b',
       this.modelRegistry,
       this.quotaManager,
       this.usageTracker,

@@ -22,7 +22,7 @@ export class OllamaAdapter extends BaseProvider {
 
   constructor(
     baseUrl = 'http://127.0.0.1:11434',
-    defaultModel = 'qwen2.5-coder:7b-instruct-q4_K_M',
+    defaultModel = 'qwen2.5-coder:1.5b',
     modelRegistry: any,
     quotaManager: any,
     usageTracker: any,

@@ -45,21 +45,31 @@ if (-not (Test-Path $pgDumpPath) -or (Get-Item $pgDumpPath).Length -eq 0) {
 $pgSize = (Get-Item $pgDumpPath).Length
 Write-Host "    PostgreSQL dump created successfully ($pgSize bytes)." -ForegroundColor Gray
 
-# 4. Redis State Snapshot
-Write-Host "[+] Triggering Redis BGSAVE and extracting RDB..." -ForegroundColor Yellow
+# 4. Redis State Snapshot (Synchronous SAVE to guarantee atomic flush)
+Write-Host "[+] Triggering synchronous Redis SAVE and extracting RDB..." -ForegroundColor Yellow
 $redisDumpPath = Join-Path $targetDir "redis.rdb"
-$cmdRedis = "docker exec -i kdi_redis_local redis-cli -a kdi_redis_local_2026 bgsave >/dev/null 2>&1; sleep 2; docker cp kdi_redis_local:/data/dump.rdb '$wslTargetDir/redis.rdb' 2>/dev/null"
+$redisPass = $env:REDIS_PASSWORD
+$envPath = Join-Path $PSScriptRoot "..\..\.env.local"
+if (-not $redisPass -and (Test-Path $envPath)) {
+  $lines = Get-Content $envPath
+  foreach ($l in $lines) {
+    if ($l -match '^\s*REDIS_PASSWORD\s*=\s*(.+)$') {
+      $redisPass = $Matches[1].Trim()
+    }
+  }
+}
+$authArg = if ($redisPass) { "-a '$redisPass' --no-auth-warning" } else { "" }
+$cmdRedis = "docker exec -i kdi_redis_local redis-cli $authArg SAVE >/dev/null 2>&1 && docker cp kdi_redis_local:/data/dump.rdb '$wslTargetDir/redis.rdb'"
 wsl.exe -d Ubuntu -e bash -c $cmdRedis
 
-if (Test-Path $redisDumpPath) {
-  $redisSize = (Get-Item $redisDumpPath).Length
-  Write-Host "    Redis RDB snapshot extracted ($redisSize bytes)." -ForegroundColor Gray
-} else {
-  Write-Host "    Redis RDB snapshot skipped or unavailable." -ForegroundColor DarkGray
+if (-not (Test-Path $redisDumpPath) -or (Get-Item $redisDumpPath).Length -eq 0) {
+  Write-Error "CRITICAL: Redis RDB extraction failed or produced empty file."
 }
+$redisSize = (Get-Item $redisDumpPath).Length
+Write-Host "    Redis RDB snapshot extracted ($redisSize bytes)." -ForegroundColor Gray
 
 # 5. Neo4j Graph Database Dump & Summary
-Write-Host "[+] Exporting Neo4j Graph Database (neo4j-admin dump & summary)..." -ForegroundColor Yellow
+Write-Host "[+] Exporting Neo4j Graph Database (Controlled offline dump with guaranteed restart)..." -ForegroundColor Yellow
 $neo4jDumpPath = Join-Path $targetDir "neo4j.dump"
 $neo4jSummaryPath = Join-Path $targetDir "neo4j_summary.json"
 
@@ -68,16 +78,43 @@ $cypherQuery = "CALL { MATCH (n) RETURN count(n) AS nodes } CALL { MATCH ()-[r]-
 $cmdSummary = "docker exec -i kdi_neo4j_local cypher-shell -u neo4j -p kdi_neo4j_local_2026 --format plain '$cypherQuery' > '$wslTargetDir/neo4j_summary.json' 2>/dev/null"
 wsl.exe -d Ubuntu -e bash -c $cmdSummary
 
-# Second perform official neo4j-admin database dump
-$cmdDump = "docker stop kdi_neo4j_local >/dev/null 2>&1 && docker run --rm --volumes-from kdi_neo4j_local neo4j:5.20-community neo4j-admin database dump --to-stdout neo4j > '$wslTargetDir/neo4j.dump' 2>/dev/null && docker start kdi_neo4j_local >/dev/null 2>&1"
-wsl.exe -d Ubuntu -e bash -c $cmdDump
+# Second perform official neo4j-admin database dump with EXIT trap to guarantee database is restarted
+$neo4jScript = @'
+set -e
+trap 'echo "[-] Ensuring kdi_neo4j_local is restarted..."; docker start kdi_neo4j_local >/dev/null 2>&1 || true' EXIT
+echo "[*] Stopping Neo4j for offline dump..."
+docker stop kdi_neo4j_local >/dev/null
+echo "[*] Performing neo4j-admin database dump..."
+docker run --rm --volumes-from kdi_neo4j_local neo4j:5.20-community neo4j-admin database dump --to-stdout neo4j > "$1"
+echo "[*] Restarting Neo4j..."
+docker start kdi_neo4j_local >/dev/null
+echo "[*] Awaiting Neo4j healthcheck..."
+for i in $(seq 1 40); do
+  STATUS=$(docker inspect --format '{{.State.Health.Status}}' kdi_neo4j_local 2>/dev/null || echo "unhealthy")
+  if [ "$STATUS" = "healthy" ]; then
+    echo "[+] Neo4j healthy ($i s)"
+    exit 0
+  fi
+  sleep 1
+done
+echo "[-] Neo4j did not report healthy within 40s"
+exit 1
+'@
 
-if ((Test-Path $neo4jDumpPath) -and (Get-Item $neo4jDumpPath).Length -gt 0) {
-  $neo4jSize = (Get-Item $neo4jDumpPath).Length
-  Write-Host "    Neo4j database dump archive created ($neo4jSize bytes)." -ForegroundColor Gray
-} else {
-  Write-Warning "Neo4j binary dump could not be completed."
+$tempScriptWin = Join-Path $targetDir "_neo4j_dump.sh"
+[System.IO.File]::WriteAllText($tempScriptWin, $neo4jScript.Replace("`r`n", "`n"))
+$tempScriptWsl = "$wslTargetDir/_neo4j_dump.sh"
+
+$dumpResult = wsl.exe -d Ubuntu -e bash -c "chmod +x '$tempScriptWsl' && bash '$tempScriptWsl' '$wslTargetDir/neo4j.dump'; code=`$?; rm -f '$tempScriptWsl'; exit `$code"
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "CRITICAL: Neo4j dump script failed with exit code $LASTEXITCODE."
 }
+
+if (-not (Test-Path $neo4jDumpPath) -or (Get-Item $neo4jDumpPath).Length -eq 0) {
+  Write-Error "CRITICAL: Neo4j database dump failed or produced empty file."
+}
+$neo4jSize = (Get-Item $neo4jDumpPath).Length
+Write-Host "    Neo4j database dump archive created ($neo4jSize bytes)." -ForegroundColor Gray
 
 # 6. Generate Checksums and Manifest
 Write-Host "[+] Generating SHA-256 verification hashes..." -ForegroundColor Yellow

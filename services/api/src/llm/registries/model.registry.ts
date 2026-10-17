@@ -219,10 +219,10 @@ export class ModelRegistry {
       // 4. Local Sovereign Ollama Models
       {
         provider: 'ollama',
-        modelId: 'qwen2.5-coder:7b-instruct-q4_K_M',
-        displayName: 'Ollama Qwen2.5 Coder 7B',
+        modelId: 'qwen2.5-coder:1.5b',
+        displayName: 'Ollama Qwen2.5 Coder 1.5B',
         enabled: true,
-        capabilities: ['TEXT', 'CODE', 'REASONING', 'TOOL_CALLING', 'STRUCTURED_OUTPUT', 'LOCAL', 'PRIVATE'],
+        capabilities: ['TEXT', 'CODE', 'REASONING', 'TOOL_CALLING', 'STRUCTURED_OUTPUT', 'LOCAL', 'PRIVATE', 'FAST'],
         contextLimit: 32_768,
         maxOutputTokens: 4096,
         streaming: true,
@@ -231,7 +231,7 @@ export class ModelRegistry {
         reasoning: true,
         coding: true,
         vision: false,
-        fast: false,
+        fast: true,
         local: true,
         private: true,
         billingMode: 'FREE',

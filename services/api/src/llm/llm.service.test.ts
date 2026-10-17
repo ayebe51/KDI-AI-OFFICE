@@ -21,7 +21,7 @@ test('CapabilityRegistry & Privacy Isolation', async (t) => {
 
   await t.test('enforces strict privacy isolation for CONFIDENTIAL requests', () => {
     const cloudModel = registry.getModel('gemini', 'gemini-1.5-pro')!;
-    const localModel = registry.getModel('ollama', 'qwen2.5-coder:7b-instruct-q4_K_M')!;
+    const localModel = registry.getModel('ollama', 'qwen2.5-coder:1.5b')!;
 
     assert.strictEqual(CapabilityRegistry.satisfiesPrivacy(cloudModel, 'CONFIDENTIAL'), false);
     assert.strictEqual(CapabilityRegistry.satisfiesPrivacy(localModel, 'CONFIDENTIAL'), true);
@@ -39,7 +39,7 @@ test('CostEstimator: Exact calculations with verification', async (t) => {
   const registry = new ModelRegistry();
 
   await t.test('computes zero cost for local sovereign models', () => {
-    const local = registry.getModel('ollama', 'qwen2.5-coder:7b-instruct-q4_K_M')!;
+    const local = registry.getModel('ollama', 'qwen2.5-coder:1.5b')!;
     const cost = CostEstimator.calculateCost(local, 1000, 500);
     assert.strictEqual(cost.totalCostUsd, 0);
     assert.strictEqual(cost.pricingSource, 'local_workstation_sovereign');

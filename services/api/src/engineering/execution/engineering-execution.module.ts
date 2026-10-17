@@ -27,8 +27,10 @@ import {
   WindowsHostExecutorAdapter,
   DeploymentRollbackService,
 } from '../host/index.js';
+import { LLMModule } from '../../llm/llm.module.js';
 
 @Module({
+  imports: [LLMModule],
   providers: [
     ApprovalGateService,
     GitWorkspaceAdapter,

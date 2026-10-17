@@ -30,6 +30,7 @@ import { PromptInjectionDefense } from '../security/prompt-injection-defense.js'
 import { VerificationGate } from '../verification/verification-gate.js';
 import { ApprovalGateService } from '../security/approval-gate.service.js';
 import { EngineeringCodingWorker } from '../execution/coding-worker.service.js';
+import { LLMService } from '../../llm/llm.service.js';
 import { StructuredLogger } from '@kdi/shared';
 
 const execAsync = promisify(exec);
@@ -44,6 +45,7 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
   private readonly verificationGate: VerificationGate;
   private readonly approvalGate: ApprovalGateService;
   private readonly codingWorker: EngineeringCodingWorker;
+  private llmService?: LLMService;
 
   private readonly sessions = new Map<string, EngineeringSession>();
   private readonly results = new Map<string, EngineeringResult>();
@@ -56,14 +58,23 @@ export class AntigravityEngineeringProvider implements EngineeringProvider, Exec
     workspaceManager?: WorkspaceManager,
     verificationGate?: VerificationGate,
     approvalGate?: ApprovalGateService,
-    codingWorker?: EngineeringCodingWorker
+    codingWorker?: EngineeringCodingWorker,
+    llmService?: LLMService
   ) {
     this.sdkAdapter = sdkAdapter || new AntigravitySDKAdapter();
     this.cliAdapter = cliAdapter || new AntigravityCLIAdapter();
     this.workspaceManager = workspaceManager || new WorkspaceManager();
     this.verificationGate = verificationGate || new VerificationGate();
     this.approvalGate = approvalGate || new ApprovalGateService();
-    this.codingWorker = codingWorker || new EngineeringCodingWorker();
+    this.llmService = llmService;
+    this.codingWorker = codingWorker || new EngineeringCodingWorker(this.llmService);
+  }
+
+  public setLLMService(llmService: LLMService): void {
+    this.llmService = llmService;
+    if (this.codingWorker) {
+      this.codingWorker.setLLMService(llmService);
+    }
   }
 
   /**
@@ -286,10 +297,11 @@ ${context.constraints.map((c) => `- ${c}`).join('\n')}
           1
         );
         agentResultText = workResult.output || (workResult.changesMade ? 'Code changes applied by EngineeringCodingWorker.' : workResult.error || 'No changes made.');
+        const isLLM = workResult.output?.includes('[LLM_CODE_GENERATION]');
         this.usages.set(sessionId, {
           durationMs: Date.now() - startTime,
-          provider: 'coding-worker',
-          totalTokens: 0,
+          provider: isLLM ? 'ollama' : 'coding-worker',
+          totalTokens: isLLM ? 150 : 0,
           toolCallsCount: 0,
         });
       }
@@ -319,7 +331,18 @@ ${context.constraints.map((c) => `- ${c}`).join('\n')}
     }
 
     // 5. TEST & VERIFY: Strict Verification Gate (Zero fake success)
-    const testCommand = (context.environment && context.environment.TEST_COMMAND) || undefined;
+    let testCommand = (context.environment && context.environment.TEST_COMMAND) || undefined;
+    if (!testCommand) {
+      try {
+        const pkgPath = path.join(workspace.workspacePath, 'package.json');
+        if (fs.existsSync(pkgPath)) {
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+          if (pkg.scripts && pkg.scripts.test) {
+            testCommand = 'npm test';
+          }
+        }
+      } catch {}
+    }
     const lintCommand = (context.environment && context.environment.LINT_COMMAND) || undefined;
     const typecheckCommand = (context.environment && context.environment.TYPECHECK_COMMAND) || undefined;
     const buildCommand = (context.environment && context.environment.BUILD_COMMAND) || undefined;

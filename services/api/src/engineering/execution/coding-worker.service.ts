@@ -17,6 +17,7 @@ import type {
   EngineeringExecutor,
   ImplementationResult,
 } from './executor.interface.js';
+import { LLMService } from '../../llm/llm.service.js';
 
 export type CodingWorkerDelegate = (
   context: EngineeringTaskContext,
@@ -29,8 +30,13 @@ export type CodingWorkerDelegate = (
 export class EngineeringCodingWorker {
   private readonly logger = new StructuredLogger('EngineeringCodingWorker');
   private customDelegate?: CodingWorkerDelegate;
+  private llmService?: LLMService;
 
-  constructor(@Optional() customDelegate?: CodingWorkerDelegate) {
+  constructor(
+    @Optional() llmService?: LLMService,
+    @Optional() customDelegate?: CodingWorkerDelegate
+  ) {
+    this.llmService = llmService;
     this.customDelegate = customDelegate;
   }
 
@@ -39,6 +45,13 @@ export class EngineeringCodingWorker {
    */
   public setDelegate(delegate: CodingWorkerDelegate): void {
     this.customDelegate = delegate;
+  }
+
+  /**
+   * Set LLMService for sovereign LLM code generation
+   */
+  public setLLMService(llmService: LLMService): void {
+    this.llmService = llmService;
   }
 
   /**
@@ -365,6 +378,27 @@ export class EngineeringCodingWorker {
     const inspection = await this.inspectRepository(worktreePath);
     const decomposition = this.decomposeTask(context, inspection);
 
+    // 1. Genuine LLM-Powered Code Modification (Primary Path when LLMService available)
+    if (this.llmService) {
+      try {
+        const llmResult = await this.executeWithLLM(context, worktreePath, inspection);
+        if (llmResult && llmResult.changesMade) {
+          return llmResult;
+        }
+      } catch (err: any) {
+        if (err.message && err.message.includes('SECURITY_VIOLATION')) {
+          return {
+            success: false,
+            status: 'PERMISSION_BLOCKED',
+            error: err.message,
+            changesMade: false,
+          };
+        }
+        this.logger.warn('executeWork', `LLM code generation failed: ${err.message}. Falling back to deterministic worker.`);
+      }
+    }
+
+    // 2. Deterministic Worker Fallback (Secondary Path)
     const taskText = `${context.title} ${context.description}`.toLowerCase();
     let changesMade = false;
     let changeLog = '';
@@ -541,9 +575,304 @@ export class EngineeringCodingWorker {
     return {
       success: true,
       status: 'IMPLEMENTING',
-      output: `Code implementation successfully executed by ${context.agentName}: ${changeLog}`,
+      output: `[DETERMINISTIC_WORKER_EXECUTION] Code implementation executed by ${context.agentName}: ${changeLog}`,
       changesMade: true,
     };
+  }
+
+  /**
+   * Genuine LLM-Powered Code Modification using local Ollama model
+   */
+  public async executeWithLLM(
+    context: EngineeringTaskContext,
+    worktreePath: string,
+    inspection: RepositoryInspection
+  ): Promise<ImplementationResult | null> {
+    if (!this.llmService) return null;
+
+    // 1. Health check Ollama availability
+    try {
+      const providers = await this.llmService.getProvidersHealth();
+      const ollama = providers.find((p) => p.provider === 'ollama');
+      if (!ollama || ollama.state !== 'AVAILABLE') {
+        this.logger.warn('executeWithLLM', 'Ollama is not available for LLM coding');
+        return null;
+      }
+    } catch (err: any) {
+      this.logger.warn('executeWithLLM', `Ollama health probe error: ${err.message}`);
+      return null;
+    }
+
+    // 2. Identify candidate target file within worktree
+    const targetFile = this.resolveTargetSourceFile(context, worktreePath, inspection);
+    if (!targetFile) {
+      this.logger.info('executeWithLLM', 'No suitable source file identified for LLM code modification');
+      return null;
+    }
+
+    const relPath = path.relative(worktreePath, targetFile).replace(/\\/g, '/');
+
+    // Security Gate 1: Check forbidden paths
+    const forbiddenPatterns = ['.env', 'credentials', 'id_rsa', 'secret', '.git'];
+    if (forbiddenPatterns.some((p) => relPath.toLowerCase().includes(p))) {
+      throw new Error(`SECURITY_VIOLATION: Target file "${relPath}" matches forbidden path policy.`);
+    }
+
+    // Read current content (limit to 16KB / ~4000 tokens)
+    let currentContent = '';
+    try {
+      currentContent = fs.readFileSync(targetFile, 'utf-8');
+      if (currentContent.length > 16384) {
+        currentContent = currentContent.slice(0, 16384);
+      }
+    } catch (err: any) {
+      this.logger.warn('executeWithLLM', `Failed to read target file: ${err.message}`);
+      return null;
+    }
+
+    // 3. Construct prompt with strict boundaries
+    const prompt = `You are a Principal Software Engineer.
+TASK: ${context.title}
+DESCRIPTION: ${context.description}
+
+ACCEPTANCE CRITERIA:
+${(context.acceptanceCriteria || []).map((c) => `- ${c}`).join('\n')}
+
+CONSTRAINTS:
+- You must ONLY modify the code in the specified target file.
+- Fix the defect or implement the requirement cleanly and surgically.
+- Output ONLY a valid JSON object matching the schema below.
+- Do NOT output extra text, markdown commentary, or explanations outside the JSON object.
+
+TARGET FILE: ${relPath}
+CURRENT CONTENT:
+\`\`\`
+${currentContent}
+\`\`\`
+
+OUTPUT FORMAT (JSON only):
+{
+  "analysis": "1-2 sentence description of root cause and fix",
+  "file": "${relPath}",
+  "replacementContent": "<complete updated file content with fix applied>"
+}`;
+
+    this.logger.info('executeWithLLM', `[OLLAMA_LOCAL_INFERENCE] Dispatching task ${context.taskId} to local Ollama (qwen2.5-coder:1.5b)`);
+
+    try {
+      const llmRes = await this.llmService.chat({
+        requestId: `llm_code_${context.taskId}_${Date.now()}`,
+        taskType: 'CODING',
+        messages: [{ role: 'user', content: prompt }],
+        privacyClass: 'CONFIDENTIAL',
+        preferredProvider: 'ollama',
+        preferredModel: 'qwen2.5-coder:1.5b',
+        temperature: 0.1,
+        maxOutputTokens: 4096,
+      });
+
+      const rawContent = llmRes.content || '';
+
+      // 4. Extract and Validate JSON from LLM Response
+      const parsed = this.parseLLMCodeResponse(rawContent);
+      if (!parsed || !parsed.replacementContent) {
+        this.logger.warn('executeWithLLM', 'LLM response did not contain valid replacementContent');
+        return null;
+      }
+
+      // Security Gate 2: Path traversal check on file path returned by LLM
+      const suggestedFile = parsed.file ? parsed.file.trim().replace(/\\/g, '/') : relPath;
+      if (suggestedFile.startsWith('/') || suggestedFile.startsWith('\\') || suggestedFile.includes('..')) {
+        throw new Error(`SECURITY_VIOLATION: LLM suggested path traversal in file: "${suggestedFile}"`);
+      }
+
+      const destPath = path.resolve(worktreePath, suggestedFile);
+      if (!CommandPolicyEngine.isPathWithinWorktree(destPath, worktreePath)) {
+        throw new Error(`SECURITY_VIOLATION: Destination path outside worktree boundary: "${destPath}"`);
+      }
+
+      // Security Gate 3: Forbidden pattern check
+      if (forbiddenPatterns.some((p) => suggestedFile.toLowerCase().includes(p))) {
+        throw new Error(`SECURITY_VIOLATION: LLM attempted to write to forbidden path "${suggestedFile}"`);
+      }
+
+      // 5. Apply the replacement content
+      fs.writeFileSync(destPath, parsed.replacementContent, 'utf-8');
+
+      this.logger.info(
+        'executeWithLLM',
+        `[LLM_CODE_GENERATION] Successfully applied LLM patch to ${suggestedFile} using ${llmRes.model} (${llmRes.latencyMs}ms)`
+      );
+
+      return {
+        success: true,
+        status: 'IMPLEMENTING',
+        changesMade: true,
+        output: `[LLM_CODE_GENERATION] Model: ${llmRes.model} (Provider: ${llmRes.provider}, Tokens: ${llmRes.usage?.totalTokens || 0}, Latency: ${llmRes.latencyMs}ms).\nFile: ${suggestedFile}\nAnalysis: ${parsed.analysis || 'Code updated to satisfy acceptance criteria.'}`,
+      };
+    } catch (err: any) {
+      if (err.message && err.message.includes('SECURITY_VIOLATION')) {
+        throw err;
+      }
+      this.logger.error('executeWithLLM', `LLM code generation failed: ${err.message}`);
+      return null;
+    }
+  }
+
+  private resolveTargetSourceFile(
+    context: EngineeringTaskContext,
+    worktreePath: string,
+    inspection: RepositoryInspection
+  ): string | null {
+    // 1. If targetedFiles specified
+    if (context.targetedFiles && context.targetedFiles.length > 0) {
+      for (const tf of context.targetedFiles) {
+        const full = path.join(worktreePath, tf);
+        if (fs.existsSync(full)) return full;
+      }
+    }
+
+    // 2. Search for file mentioned in title or description
+    const text = `${context.title} ${context.description}`;
+    const fileMatch = text.match(/[\w./-]+\.(?:ts|js|mjs|cjs|py|php|json)/i);
+    if (fileMatch) {
+      const candidate = path.join(worktreePath, fileMatch[0]);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    }
+
+    // 3. Check inspection entryPoints or relevantModules (ignoring node_modules and tests)
+    const candidates = [
+      ...(inspection.relevantModules || []),
+      ...(inspection.entryPoints || []),
+    ];
+    for (const c of candidates) {
+      const full = path.join(worktreePath, c);
+      if (fs.existsSync(full) && !c.includes('test') && !c.includes('spec') && !c.includes('node_modules')) {
+        return full;
+      }
+    }
+
+    // 4. Fallback search inside src/
+    const srcDir = path.join(worktreePath, 'src');
+    if (fs.existsSync(srcDir)) {
+      const files = fs.readdirSync(srcDir);
+      for (const f of files) {
+        const full = path.join(srcDir, f);
+        if (fs.statSync(full).isFile() && !f.includes('test') && !f.includes('spec')) {
+          return full;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private parseLLMCodeResponse(raw: string): { analysis?: string; file?: string; replacementContent?: string } | null {
+    if (!raw || !raw.trim()) return null;
+
+    const text = raw.trim();
+
+    // 1. First attempt: standard JSON.parse on stripped text
+    let candidate = text;
+    if (candidate.startsWith('```json')) {
+      candidate = candidate.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+    } else if (candidate.startsWith('```')) {
+      candidate = candidate.replace(/^```\w*\s*/i, '').replace(/\s*```$/, '');
+    }
+
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed.replacementContent === 'string' && parsed.replacementContent.trim()) {
+        return {
+          ...parsed,
+          replacementContent: this.sanitizeCode(parsed.replacementContent),
+        };
+      }
+    } catch {}
+
+    // 2. Second attempt: substring between first '{' and last '}'
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx > startIdx) {
+      const substr = text.slice(startIdx, endIdx + 1);
+      try {
+        const parsed = JSON.parse(substr);
+        if (parsed && typeof parsed.replacementContent === 'string' && parsed.replacementContent.trim()) {
+          return {
+            ...parsed,
+            replacementContent: this.sanitizeCode(parsed.replacementContent),
+          };
+        }
+      } catch {}
+
+      // 3. Third attempt: Repair literal newlines inside JSON strings
+      try {
+        const repaired = substr.replace(/"((?:\\.|[^"\\])*)"/gs, (match) => {
+          return match
+            .replace(/\r\n/g, '\\n')
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\n')
+            .replace(/\t/g, '\\t');
+        });
+        const parsed = JSON.parse(repaired);
+        if (parsed && typeof parsed.replacementContent === 'string' && parsed.replacementContent.trim()) {
+          return {
+            ...parsed,
+            replacementContent: this.sanitizeCode(parsed.replacementContent),
+          };
+        }
+      } catch {}
+    }
+
+    // 4a. Fourth attempt: Match replacementContent in backticks: "replacementContent": `...`
+    const backtickMatch = text.match(/"replacementContent"\s*:\s*`([\s\S]+?)`/);
+    if (backtickMatch && backtickMatch[1].trim()) {
+      return {
+        file: (text.match(/"file"\s*:\s*["`]?([^"`]+)["`]?/) || [])[1],
+        analysis: (text.match(/"analysis"\s*:\s*["`]?([^"`]+)["`]?/) || [])[1],
+        replacementContent: this.sanitizeCode(backtickMatch[1]),
+      };
+    }
+
+    // 4b. Extract replacementContent with double quotes: "replacementContent": "..."
+    const contentMatch = text.match(/"replacementContent"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+    if (contentMatch) {
+      try {
+        const unescaped = JSON.parse(`"${contentMatch[1]}"`);
+        return {
+          file: (text.match(/"file"\s*:\s*"([^"]+)"/) || [])[1],
+          analysis: (text.match(/"analysis"\s*:\s*"([^"]+)"/) || [])[1],
+          replacementContent: this.sanitizeCode(unescaped),
+        };
+      } catch {
+        return {
+          file: (text.match(/"file"\s*:\s*"([^"]+)"/) || [])[1],
+          analysis: (text.match(/"analysis"\s*:\s*"([^"]+)"/) || [])[1],
+          replacementContent: this.sanitizeCode(contentMatch[1]),
+        };
+      }
+    }
+
+    // 5. Fifth attempt: Extract code from markdown code fences
+    const codeBlockMatch = text.match(/```(?:javascript|js|typescript|ts)?\s*\n([\s\S]+?)\n```/i);
+    if (codeBlockMatch && codeBlockMatch[1].trim()) {
+      return {
+        analysis: 'Extracted code block from model response',
+        replacementContent: this.sanitizeCode(codeBlockMatch[1]),
+      };
+    }
+
+    return null;
+  }
+
+  private sanitizeCode(code: string): string {
+    let cleaned = code.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```[^\n]*\n/, '').replace(/\n```\s*$/, '').trim();
+    }
+    return cleaned;
   }
 
   /**

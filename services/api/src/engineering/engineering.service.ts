@@ -30,6 +30,8 @@ import { EventsGateway } from '../websocket/events.gateway.js';
 import { StructuredLogger } from '@kdi/shared';
 import { EngineeringOSService } from './operating-system/engineering-os.service.js';
 import { EngineeringManagerService } from './manager/engineering-manager.service.js';
+import { EngineeringCodingWorker } from './execution/coding-worker.service.js';
+import { LLMService } from '../llm/llm.service.js';
 
 @Injectable()
 export class EngineeringService implements OnModuleInit {
@@ -46,6 +48,7 @@ export class EngineeringService implements OnModuleInit {
   public readonly agentReviewer: EngineeringAgentService;
   public readonly osService: EngineeringOSService;
   public readonly managerService: EngineeringManagerService;
+  public readonly codingWorker: EngineeringCodingWorker;
 
   constructor(
     private readonly postgresService: PostgresService,
@@ -55,7 +58,9 @@ export class EngineeringService implements OnModuleInit {
     @Optional() executorService?: EngineeringExecutorService,
     @Optional() agentReviewer?: EngineeringAgentService,
     @Optional() osService?: EngineeringOSService,
-    @Optional() managerService?: EngineeringManagerService
+    @Optional() managerService?: EngineeringManagerService,
+    @Optional() codingWorker?: EngineeringCodingWorker,
+    @Optional() private readonly llmService?: LLMService
   ) {
     this.approvalGate = new ApprovalGateService();
     this.workspaceManager = new WorkspaceManager();
@@ -63,6 +68,10 @@ export class EngineeringService implements OnModuleInit {
     this.executorService = executorService || new EngineeringExecutorService(this.approvalGate, this.agentReviewer);
     this.osService = osService || new EngineeringOSService();
     this.managerService = managerService || new EngineeringManagerService();
+    this.codingWorker = codingWorker || new EngineeringCodingWorker(this.llmService);
+    if (this.llmService && this.codingWorker) {
+      this.codingWorker.setLLMService(this.llmService);
+    }
     this.eventEmitter = new EngineeringEventEmitter(this.eventsGateway, this.redisService);
     this.repository = new EngineeringRepository(this.postgresService);
     this.neo4jGraph = new Neo4jEngineeringService(this.neo4jService);
@@ -73,12 +82,18 @@ export class EngineeringService implements OnModuleInit {
       undefined,
       this.workspaceManager,
       undefined,
-      this.approvalGate
+      this.approvalGate,
+      this.codingWorker,
+      this.llmService
     );
   }
 
   async onModuleInit() {
     this.logger.info('onModuleInit', 'Initializing Phase 4 Engineering Subsystem');
+    if (this.llmService) {
+      this.codingWorker.setLLMService(this.llmService);
+      this.provider.setLLMService(this.llmService);
+    }
     await this.provider.initialize();
   }
 
